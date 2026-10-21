@@ -45,6 +45,7 @@ func (s *Server) Router() http.Handler {
 		r.Get("/repositories/{id}/refs", s.hostingBrowse)
 		r.Get("/repositories/{id}/commits", s.hostingBrowse)
 		r.Get("/repositories/{id}/tree", s.hostingBrowse)
+		r.Get("/repositories/{id}/file", s.hostingBrowse)
 		r.Get("/repositories/{id}/diff", s.hostingBrowse)
 		r.Get("/repositories/{id}/events", s.hostingBrowse)
 		r.Get("/repositories/{id}/members", s.hostingMembers)

@@ -2,6 +2,9 @@
 
 Git-backed Skills Delivery Platform。
 
+**许可证：[Apache License 2.0](LICENSE)。允许商业使用、修改、分发、销售及收费托管。**
+使用与分发要求见[中文许可说明](LICENSE-FAQ.md)、[NOTICE](NOTICE) 和[第三方声明](THIRD_PARTY_NOTICES.md)。
+
 企业内部 Skills 交付平台。外部 Git 是唯一内容来源；Go 后端完成静态校验、不可变快照、渠道发布与权限校验；Next.js 管理端操作真实 API；Linux 客户端通过只读 FUSE 向 Agent 暴露文件。
 
 ## 本地运行

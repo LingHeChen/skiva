@@ -40,7 +40,7 @@ schemas.update({
  'Member':obj({'id':uid,'email':nullable,'displayName':nullable,'active':S('boolean'),'roles':arr(str_)},['id','active','roles']),
  'Credential':obj({'id':uid,'name':str_,'secretRef':str_,'createdAt':str_},['id','name','secretRef']),
  'Notification':obj({'id':uid,'title':str_,'href':str_,'createdAt':str_,'read':S('boolean')},['id','title','href','createdAt','read']),
- 'Me':obj({'id':uid,'email':nullable,'displayName':nullable,'orgId':uid,'roles':arr(str_)},['id','orgId','roles']),
+ 'Me':obj({'id':uid,'email':nullable,'displayName':nullable,'orgId':uid,'orgName':str_,'roles':arr(str_)},['id','orgId','roles']),
  'Settings':obj({'name':str_,'policy':ref('Resource'),'oidcConfigured':S('boolean'),'production':S('boolean')},['name','policy','oidcConfigured','production']),
  'Created':obj({'id':uid},['id']),
  'CredentialIssued':obj({'id':uid,'token':S('string',description='Shown once, never persisted; omitted on idempotent replay'),'notice':str_}),
@@ -77,7 +77,11 @@ for method,path,handler in re.findall(r'r\.(Get|Post|Patch|Delete|Put)\("([^"]+)
  if handler=='s.gitTokens':
   if method=='get':response=ref('GitTokenPage')
   elif not path.endswith('/revoke'):response=ref('CredentialIssued');code='201'
- if handler=='s.hostingBrowse':parameters += [{'name':k,'in':'query','schema':str_} for k in ['commit','ref','from','offset','limit']]
+ if handler=='s.hostingBrowse':
+  parameters += [{'name':k,'in':'query','schema':str_} for k in ['commit','ref','from','offset','limit']]
+  if path.endswith('/file'):
+   parameters.append({'name':'path','in':'query','required':True,'schema':str_,'description':'Repository-relative UTF-8 file path; preview limited to 256 KiB'})
+   response=obj({'path':str_,'content':str_,'commit':str_,'size':S('integer')},['path','content','commit','size'])
  if handler=='s.createRelease':response=ref('ReleasePreview' if path.endswith('/preview') else 'Release')
  if handler in ['s.login','s.refreshSession']:response=obj({'authenticated':S('boolean'),'expiresIn':S('integer')},['authenticated','expiresIn'])
  if handler=='s.oidcStart' or handler=='s.oidcCallback':code='302'

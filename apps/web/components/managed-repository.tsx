@@ -1,4 +1,9 @@
 "use client";
+import { Card } from "./ui/card";
+import { FormInput } from "./ui/form-input";
+import { NativeSelect, NativeSelectOption } from "./ui/native-select";
+import { Label } from "./ui/label";
+
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -104,22 +109,22 @@ export function ManagedRepository({ id }: { id: string }) {
   }
   if (info.isPending)
     return (
-      <section className="panel detail-panel" aria-busy="true">
+      <Card className="panel detail-panel" aria-busy="true">
         正在读取托管仓库…
-      </section>
+      </Card>
     );
   if (info.error)
     return (
-      <section className="panel detail-panel">
+      <Card className="panel detail-panel">
         <p role="alert">{info.error.message}</p>
         <Button onClick={() => info.refetch()}>重试</Button>
-      </section>
+      </Card>
     );
   const git = info.data,
     maintainer = git.accessRole === "maintainer",
     p = policy || git.hostingPolicy;
   return (
-    <section className="panel detail-panel hosting-panel">
+    <Card className="panel detail-panel hosting-panel">
       <div className="section-heading">
         <div>
           <h2>平台托管 · Git</h2>
@@ -171,9 +176,9 @@ export function ManagedRepository({ id }: { id: string }) {
       </p>
       {["commits", "tree", "diff"].includes(tab) && (
         <div className="hosting-fields">
-          <label>
+          <Label>
             Commit SHA 或 refs/heads/main
-            <input
+            <FormInput
               value={commit}
               onChange={(e) => {
                 setCommit(e.target.value);
@@ -181,16 +186,16 @@ export function ManagedRepository({ id }: { id: string }) {
               }}
               placeholder="留空使用默认分支"
             />
-          </label>
+          </Label>
           {tab === "diff" && (
-            <label>
+            <Label>
               对比起点（完整 SHA）
-              <input
+              <FormInput
                 value={base}
                 onChange={(e) => setBase(e.target.value)}
                 placeholder="留空显示该提交的改动"
               />
-            </label>
+            </Label>
           )}
         </div>
       )}
@@ -318,29 +323,29 @@ export function ManagedRepository({ id }: { id: string }) {
       {tab === "tokens" && (
         <div className="hosting-fields">
           <h3>创建专用于此仓库的 Git Token</h3>
-          <label>
+          <Label>
             名称
-            <input value={name} onChange={(e) => setName(e.target.value)} />
-          </label>
-          <label>
+            <FormInput value={name} onChange={(e) => setName(e.target.value)} />
+          </Label>
+          <Label>
             有效天数（1–90）
-            <input
+            <FormInput
               type="number"
               min={1}
               max={90}
               value={days}
               onChange={(e) => setDays(Number(e.target.value))}
             />
-          </label>
-          <label>
-            <input
+          </Label>
+          <Label>
+            <FormInput
               type="checkbox"
               checked={write}
               disabled={git.accessRole === "viewer"}
               onChange={(e) => setWrite(e.target.checked)}
             />
             允许 Push（repo:write）
-          </label>
+          </Label>
           <Button
             disabled={busy || !name || days < 1 || days > 90}
             onClick={async () => {
@@ -401,23 +406,32 @@ export function ManagedRepository({ id }: { id: string }) {
           ))}
           {maintainer && (
             <div className="hosting-fields">
-              <label>
+              <Label>
                 用户 ID
-                <input
+                <FormInput
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
                   placeholder="组织成员的用户 UUID"
                 />
-              </label>
-              <label>
+              </Label>
+              <Label>
                 仓库角色
-                <select value={role} onChange={(e) => setRole(e.target.value)}>
-                  <option value="viewer">Viewer · 只读</option>
-                  <option value="contributor">Contributor · 非保护分支</option>
-                  <option value="maintainer">Maintainer · 仓库管理</option>
-                  <option value="none">移除成员</option>
-                </select>
-              </label>
+                <NativeSelect
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                >
+                  <NativeSelectOption value="viewer">
+                    Viewer · 只读
+                  </NativeSelectOption>
+                  <NativeSelectOption value="contributor">
+                    Contributor · 非保护分支
+                  </NativeSelectOption>
+                  <NativeSelectOption value="maintainer">
+                    Maintainer · 仓库管理
+                  </NativeSelectOption>
+                  <NativeSelectOption value="none">移除成员</NativeSelectOption>
+                </NativeSelect>
+              </Label>
               <Button
                 disabled={busy || !userId}
                 onClick={() =>
@@ -445,9 +459,9 @@ export function ManagedRepository({ id }: { id: string }) {
             ["protectedBranches", "保护分支"],
             ["triggerRefs", "自动构建 Ref"],
           ].map(([key, label]) => (
-            <label key={key}>
+            <Label key={key}>
               {label}（逗号分隔，支持 *）
-              <input
+              <FormInput
                 disabled={!maintainer}
                 value={(p[key] as string[]).join(",")}
                 onChange={(e) =>
@@ -460,7 +474,7 @@ export function ManagedRepository({ id }: { id: string }) {
                   })
                 }
               />
-            </label>
+            </Label>
           ))}
           {[
             ["maxPushBytes", "单次 Push 字节上限"],
@@ -468,9 +482,9 @@ export function ManagedRepository({ id }: { id: string }) {
             ["maxFileBytes", "单文件字节上限"],
             ["maxFiles", "文件数量上限"],
           ].map(([key, label]) => (
-            <label key={key}>
+            <Label key={key}>
               {label}
-              <input
+              <FormInput
                 type="number"
                 disabled={!maintainer}
                 value={p[key]}
@@ -478,21 +492,21 @@ export function ManagedRepository({ id }: { id: string }) {
                   setPolicy({ ...p, [key]: Number(e.target.value) })
                 }
               />
-            </label>
+            </Label>
           ))}
           {[
             ["denyForcePush", "禁止 Force Push"],
             ["protectTags", "保护 Tags"],
           ].map(([key, label]) => (
-            <label key={key}>
-              <input
+            <Label key={key}>
+              <FormInput
                 type="checkbox"
                 disabled={!maintainer}
                 checked={p[key]}
                 onChange={(e) => setPolicy({ ...p, [key]: e.target.checked })}
               />
               {label}
-            </label>
+            </Label>
           ))}
           {maintainer && (
             <Button
@@ -547,6 +561,6 @@ export function ManagedRepository({ id }: { id: string }) {
       >
         新 Git 请求会立即被拒绝。已开始的传输最多运行至 120 秒超时。
       </ConfirmDialog>
-    </section>
+    </Card>
   );
 }

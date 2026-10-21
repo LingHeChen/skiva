@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 func (s *Server) gitTokens(w http.ResponseWriter, r *http.Request) {
@@ -216,6 +217,39 @@ func (s *Server) hostingBrowse(w http.ResponseWriter, r *http.Request) {
 	commit = strings.TrimSpace(string(resolved))
 	var b []byte
 	switch {
+	case strings.HasSuffix(r.URL.Path, "/file"):
+		path := r.URL.Query().Get("path")
+		if !protocol.ValidPath(path) {
+			fail(w, r, 400, "INVALID_PATH", "Use a safe repository-relative file path")
+			return
+		}
+		object := commit + ":" + path
+		kind, err := s.git(r.Context(), dir, "cat-file", "-t", object)
+		if err != nil || strings.TrimSpace(string(kind)) != "blob" {
+			fail(w, r, 404, "FILE_NOT_FOUND", "File not found in this commit")
+			return
+		}
+		sizeBytes, err := s.git(r.Context(), dir, "cat-file", "-s", object)
+		size, parseErr := strconv.ParseInt(strings.TrimSpace(string(sizeBytes)), 10, 64)
+		if err != nil || parseErr != nil {
+			fail(w, r, 500, "FILE_READ_FAILED", "Unable to inspect file")
+			return
+		}
+		if size > 256<<10 {
+			fail(w, r, 413, "FILE_TOO_LARGE", "Preview is limited to 256 KiB; use Git to read the full file")
+			return
+		}
+		content, err := s.git(r.Context(), dir, "cat-file", "blob", object)
+		if err != nil {
+			s.dbError(w, r, err)
+			return
+		}
+		if !utf8.Valid(content) || strings.ContainsRune(string(content), '\x00') {
+			fail(w, r, 415, "BINARY_FILE", "Binary files cannot be previewed; use Git to read this file")
+			return
+		}
+		jsonOut(w, 200, map[string]any{"path": path, "content": string(content), "commit": commit, "size": size})
+		return
 	case strings.HasSuffix(r.URL.Path, "/commits"):
 		b, e = s.git(r.Context(), dir, "log", "--format=%H%x00%an%x00%aI%x00%s", "--max-count="+strconv.Itoa(limit), "--skip="+strconv.Itoa(offset), commit, "--")
 		items := []map[string]string{}

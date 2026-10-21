@@ -8,6 +8,22 @@ export type DocPage = {
 
 export const docs: DocPage[] = [
   {
+    slug: "license",
+    title: "许可与使用范围",
+    description:
+      "采用 Apache License 2.0，允许商业使用、修改、分发与收费托管。",
+    group: "开始使用",
+    body: "## Apache License 2.0\n\nSkiva 采用标准 **Apache License 2.0**（SPDX：Apache-2.0）。允许个人和企业自部署、修改、分发、销售，也允许提供收费托管服务。项目不附加禁止商用或禁止修改版盈利的限制。\n\n## 分发义务\n\n向接收者提供许可证文本，对修改过的文件作出明确声明，保留适用的版权及归属声明，并按许可证第 4 条保留适用的 NOTICE 内容。许可证不要求公开所有修改版的源码。\n\n许可证包含专利授权及相关终止条件，不自动授予商标使用权；担保和责任限制以正式文本为准。\n\n## 第三方与用户内容\n\n第三方组件仍遵守各自许可证。用户自己的 Skills、业务数据和 Agent 输出不会仅因使用 Skiva 而自动适用本项目许可证。\n\n## 正式文件\n\n[LICENSE](https://github.com/LingHeChen/skiva/blob/main/LICENSE) · [NOTICE](https://github.com/LingHeChen/skiva/blob/main/NOTICE) · [中文说明](https://github.com/LingHeChen/skiva/blob/main/LICENSE-FAQ.md) · [第三方声明](https://github.com/LingHeChen/skiva/blob/main/THIRD_PARTY_NOTICES.md)\n\n以所使用版本附带的 LICENSE 为准。本页只是说明，不增加额外限制。官方条款见 [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)。\n",
+  },
+  {
+    slug: "workspace",
+    title: "使用仓库工作区",
+    description:
+      "浏览 Git 文件、定位校验问题，并在发布抽屉中审阅完整版本集合。",
+    group: "开始使用",
+    body: "## 找到操作入口\n\n进入 [Git 仓库](/repositories)，打开仓库后可以在概览、文件、Skills、流水线和设置之间切换。顶部的命令搜索支持 ⌘ K / Ctrl K，输入仓库或页面名称后按 Enter 跳转。\n\n## 文件与源码\n\n托管仓库的文件页支持切换 Git 引用、查找文件、展开目录以及预览 Markdown / 查看带行号的源码。文件内容固定在当前文件树的提交 SHA。点击提交历史可浏览某次历史提交。\n\n文本预览上限为 256 KiB，二进制文件请通过 Git 下载。外部仓库的文件页提供已构建 Skill 版本的内容，原始 Git 文件请在源服务浏览。元数据可以在 Markdown 预览中展开。\n\n## 维护仓库\n\n设置标签保留了 Git Token、仓库成员、分支保护、提交、差异和同步管理。编辑配置用于维护扫描范围；提交 .skills-platform.yaml 来定义仓库流水线配置，详细字段见 [流水线配置](/docs/pipelines)。\n\n## 准备发布\n\n点击准备发布，打开组织级发布抽屉。默认继承 Stable 的完整集合，即使入口来自一个仓库，仍然可以组合多个仓库的 Skills。选择需要替换的版本，在审阅版本差异中查看文件前后内容，并检查所有移除提示。\n\n预览完整视图通过服务端校验后，才可创建不可变快照。修改选择或风险确认会使上次预览失效。创建快照不会自动推进渠道。\n\n## 查看快照与渠道\n\n快照详情包含完整内容、版本差异、渠道与记录三个标签。在渠道与记录中，当前快照会预选为目标；填写原因并确认后才能推进渠道。回滚使用渠道历史中的快照。所有操作仍由后端权限、generation 与幂等键保护。\n\n## 定位失败与检查 Agent\n\n流水线详情按阶段展示后端校验诊断，可以搜索消息、文件路径和规则 ID，并筛选错误。该面板不是任意脚本的终端输出。\n\n挂载终端页并列显示最近上报快照与渠道目标快照。pinned 模式由任务固定，不会自动跟随渠道。组织权限、安全设置和个人账户仍可从侧栏访问。\n",
+  },
+  {
     slug: "",
     title: "让 Skills 从提交走到交付",
     description:
@@ -20,7 +36,7 @@ export const docs: DocPage[] = [
     title: "完成第一次发布",
     description: "沿着现有演示仓库走一遍，理解每一步为什么需要确认。",
     group: "开始使用",
-    body: "## 开始前\n\n打开 [管理控制台](/dashboard) 并登录。自建环境的管理员邮箱与密码由部署配置决定。本地首次启动方式见 [部署指南](/docs/operations)。\n\n如果列表里已有 enterprise-demo，可以直接使用其中的 sql-query 和 code-review。没有演示数据时，先按下一节接入自己的 Git 仓库。\n\n## 1. 接入并同步仓库\n\n进入 [Git 仓库](/repositories)，添加仓库地址、凭据引用、默认 Ref（例如 refs/heads/main），并设置 Skill 根目录 skills。私有 Git 主机必须符合部署的允许列表和网络策略。\n\n先测试连接，再执行同步。在 [流水线](/pipelines) 查看结果；失败时按诊断中的文件、规则和行号修复，提交后重新同步。\n\n## 2. 查看候选版本\n\n进入 [Skills Registry](/skills)，确认名称、描述、来源提交和文件树。打开 SKILL.md，检查引用文件是否完整。\n\n校验成功只说明候选内容已准备好，此时不会修改线上渠道。\n\n## 3. 创建完整快照\n\n进入 [创建发布](/releases/new)，勾选本次需要交付的全部 Skills，并选择各自版本。点击“预览完整视图”，审阅警告和影响范围，再创建不可变快照。\n\n> 快照是完整集合，不是补丁。线上若包含 A、B、C，只更新 A 时也要选择 A 新版、B 原版和 C 原版。当前表单需要显式选择完整集合。\n\n## 4. 先推进 Canary\n\n进入 [发布渠道](/channels)，在 Canary 选择刚创建的快照，检查差异、填写原因并确认。记下快照 ID，验证通过后将同一个快照推进 Stable。\n\n## 5. 连接测试 Agent\n\n在 [Agent Profiles](/profiles) 创建测试 Profile：渠道 canary，选择允许访问的 Skills，模式 dynamic。再到 [挂载终端](/clients) 注册客户端，保存仅展示一次的 Token。\n\n按 [客户端指南](/docs/clients) 在 Linux 挂载并接入 Agent。确认文件内容和预期行为后，再推进 Stable。\n\n## 完成标准\n\n- 流水线成功，Registry 中能看到预期提交的版本。\n- Canary 指向新快照，Stable 在确认发布前保持不变。\n- 测试客户端只能读取 Profile 授权的 Skills。\n- 推进 Stable 后，dynamic 客户端的新文件打开看到新内容。\n- [审计日志](/audit) 能找到本次发布记录。",
+    body: "## 开始前\n\n打开 [管理控制台](/dashboard) 并登录。自建环境的管理员邮箱与密码由部署配置决定。本地首次启动方式见 [部署指南](/docs/operations)。\n\n如果列表里已有 enterprise-demo，可以直接使用其中的 sql-query 和 code-review。没有演示数据时，先按下一节接入自己的 Git 仓库。\n\n## 1. 接入并同步仓库\n\n进入 [Git 仓库](/repositories)，添加仓库地址、凭据引用、默认 Ref（例如 refs/heads/main），并设置 Skill 根目录 skills。私有 Git 主机必须符合部署的允许列表和网络策略。\n\n先测试连接，再执行同步。在 [流水线](/pipelines) 查看结果；失败时按诊断中的文件、规则和行号修复，提交后重新同步。\n\n## 2. 查看候选版本\n\n进入 [Skills Registry](/skills)，确认名称、描述、来源提交和文件树。打开 SKILL.md，检查引用文件是否完整。\n\n校验成功只说明候选内容已准备好，此时不会修改线上渠道。\n\n## 3. 创建完整快照\n\n进入 [创建发布](/releases/new)，检查从 Stable 继承的完整集合，勾选新增 Skills，并替换需要更新的版本。点击“预览完整视图”，审阅警告和影响范围，再创建不可变快照。\n\n> 快照是完整集合，不是补丁。线上若包含 A、B、C，只更新 A 时也要选择 A 新版、B 原版和 C 原版。发布抽屉会默认继承 Stable 的完整集合；替换目标版本时保留其他 Skills，移除项会明确提示。\n\n## 4. 先推进 Canary\n\n进入 [发布渠道](/channels)，在 Canary 选择刚创建的快照，检查差异、填写原因并确认。记下快照 ID，验证通过后将同一个快照推进 Stable。\n\n## 5. 连接测试 Agent\n\n在 [Agent Profiles](/profiles) 创建测试 Profile：渠道 canary，选择允许访问的 Skills，模式 dynamic。再到 [挂载终端](/clients) 注册客户端，保存仅展示一次的 Token。\n\n按 [客户端指南](/docs/clients) 在 Linux 挂载并接入 Agent。确认文件内容和预期行为后，再推进 Stable。\n\n## 完成标准\n\n- 流水线成功，Registry 中能看到预期提交的版本。\n- Canary 指向新快照，Stable 在确认发布前保持不变。\n- 测试客户端只能读取 Profile 授权的 Skills。\n- 推进 Stable 后，dynamic 客户端的新文件打开看到新内容。\n- [审计日志](/audit) 能找到本次发布记录。",
   },
   {
     slug: "managed-git",

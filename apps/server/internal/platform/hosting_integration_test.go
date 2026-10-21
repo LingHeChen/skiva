@@ -80,6 +80,22 @@ func TestManagedGitCLI(t *testing.T) {
 		git(true, "-C", work, "push", "origin", "main")
 	}
 	latest := git(true, "-C", work, "rev-parse", "HEAD")
+	// Browser reads are pinned to a commit and enforce repository-relative paths.
+	code, out = request(t, ts, session, "GET", "/api/v1/repositories/"+id+"/file?commit="+latest+"&path=notes.md", nil, "")
+	if code != 200 || out["content"] != "B" || out["commit"] != latest {
+		t.Fatalf("file preview: %d %v", code, out)
+	}
+	for _, path := range []string{"../config", "/etc/passwd", "notes.md%00"} {
+		code, _ = request(t, ts, session, "GET", "/api/v1/repositories/"+id+"/file?commit="+latest+"&path="+path, nil, "")
+		if code != 400 {
+			t.Fatalf("unsafe file path %s: %d", path, code)
+		}
+	}
+	code, _ = request(t, ts, session, "GET", "/api/v1/repositories/"+id+"/file?commit="+original+"&path=notes.md", nil, "")
+	if code != 404 {
+		t.Fatalf("file must not come from moving HEAD: %d", code)
+	}
+
 	s.hostingTick(ctx)
 	var count int
 	if e := s.DB.QueryRow(ctx, "SELECT count(*) FROM repository_ref_events WHERE repository_id=$1 AND source='hook'", id).Scan(&count); e != nil || count != 2 {
@@ -192,6 +208,10 @@ func TestManagedGitCLI(t *testing.T) {
 	c, _ := request(t, ts, userSession, "GET", "/api/v1/repositories/"+id+"/tree", nil, "")
 	if c != 404 {
 		t.Fatalf("nonmember tree status %d", c)
+	}
+	c, _ = request(t, ts, userSession, "GET", "/api/v1/repositories/"+id+"/file?path=SKILL.md", nil, "")
+	if c != 404 {
+		t.Fatalf("nonmember file status %d", c)
 	}
 	c, _ = request(t, ts, session, "PUT", "/api/v1/repositories/"+id+"/members", map[string]string{"userId": user, "accessRole": "contributor"}, "")
 	if c != 200 {

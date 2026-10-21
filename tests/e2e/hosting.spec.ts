@@ -22,6 +22,7 @@ test("managed repository creation, history, token lifecycle, policies and mobile
   await page.getByLabel("仓库名称", { exact: true }).fill(slug);
   await page.getByRole("button", { name: "保存配置", exact: true }).click();
   await expect(page).toHaveURL(/repositories\/[a-f0-9-]+$/);
+  await page.getByRole("tab", { name: "设置", exact: true }).click();
   const panel = page.locator(".hosting-panel");
   await expect(
     panel.getByRole("heading", { name: "平台托管 · Git" }),

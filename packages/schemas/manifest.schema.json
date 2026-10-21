@@ -1152,6 +1152,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "orgName": {
+            "type": "string"
+          },
           "roles": {
             "type": "array",
             "items": {

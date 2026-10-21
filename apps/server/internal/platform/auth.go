@@ -147,7 +147,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 }
 func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 	a := who(r)
-	s.one(w, r, `SELECT jsonb_build_object('id',u.id,'email',u.email,'displayName',u.display_name,'orgId',u.org_id,'roles',$2::jsonb,'managedGitEnabled',$3::boolean) FROM users u WHERE id=$1`, a.ID, mustJSON(a.Roles), hostingEnabled("ENABLED"))
+	s.one(w, r, `SELECT jsonb_build_object('id',u.id,'email',u.email,'displayName',u.display_name,'orgId',u.org_id,'orgName',(SELECT name FROM organizations WHERE id=u.org_id),'roles',$2::jsonb,'managedGitEnabled',$3::boolean) FROM users u WHERE id=$1`, a.ID, mustJSON(a.Roles), hostingEnabled("ENABLED"))
 }
 func mustJSON(v any) []byte { b, _ := json.Marshal(v); return b }
 func (s *Server) account(w http.ResponseWriter, r *http.Request) {

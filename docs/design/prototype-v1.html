@@ -1,0 +1,2084 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Skiva · 交付工作台 / 界面优化原型</title>
+    <style>
+      :root {
+        --bg: #f5f5f0;
+        --paper: #fff;
+        --ink: #252a22;
+        --muted: #73776c;
+        --line: #e3e5dc;
+        --olive: #54663b;
+        --soft: #eef2e7;
+        --orange: #b66532;
+        --red: #ab453d;
+        --mono: "SFMono-Regular", Consolas, monospace;
+        --radius: 12px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font:
+          14px/1.6 "Avenir Next",
+          "PingFang SC",
+          "Microsoft YaHei",
+          sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+      button,
+      a {
+        -webkit-tap-highlight-color: transparent;
+      }
+      button {
+        cursor: pointer;
+      }
+      a {
+        color: inherit;
+      }
+      button:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid #a5b788;
+        outline-offset: 3px;
+      }
+      button {
+        color: inherit;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+      h1 {
+        font-size: 32px;
+        letter-spacing: -1.2px;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      h2 {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: -0.4px;
+      }
+      h3 {
+        font-size: 15px;
+        font-weight: 600;
+      }
+      small {
+        font-size: 12px;
+      }
+      svg {
+        width: 18px;
+        height: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        flex-shrink: 0;
+      }
+      code,
+      .mono {
+        font-family: var(--mono);
+        font-size: 12px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .upper {
+        font-size: 10px;
+        font-weight: 650;
+        letter-spacing: 1.7px;
+        color: var(--muted);
+      }
+      .shell {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 226px;
+        position: fixed;
+        inset: 0 auto 0 0;
+        display: flex;
+        flex-direction: column;
+        background: #edeee7;
+        border-right: 1px solid #dfe2d5;
+        padding: 30px 18px 20px;
+        z-index: 30;
+      }
+      .brand {
+        display: flex;
+        gap: 11px;
+        align-items: center;
+        font-size: 29px;
+        letter-spacing: -1.5px;
+        font-weight: 650;
+        padding: 0 12px;
+      }
+      .mark {
+        width: 32px;
+        height: 35px;
+        position: relative;
+        background: #53663b;
+        border-radius: 8px;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        transform: rotate(-5deg);
+      }
+      .mark svg {
+        transform: rotate(5deg);
+        width: 23px;
+        height: 23px;
+      }
+      .brand small {
+        letter-spacing: 0.5px;
+        font-size: 9px;
+        margin-top: 12px;
+        color: var(--olive);
+      }
+      .workspace {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 13px 11px;
+        margin: 29px 0 22px;
+        border: 1px solid #d9ddce;
+        border-radius: 9px;
+        background: #f7f8f2;
+      }
+      .avatar {
+        width: 29px;
+        height: 29px;
+        border-radius: 7px;
+        background: #dce3cd;
+        color: #52643c;
+        display: grid;
+        place-items: center;
+        font-weight: 600;
+        font-size: 12px;
+      }
+      .workspace strong {
+        font-size: 12px;
+      }
+      .workspace small {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .navlabel {
+        padding: 19px 12px 7px;
+        font-size: 10px;
+        letter-spacing: 1.8px;
+        color: #7a806e;
+      }
+      .nav {
+        border: 0;
+        background: transparent;
+        width: 100%;
+        display: flex;
+        gap: 12px;
+        padding: 11px 12px;
+        border-radius: 7px;
+        align-items: center;
+        text-align: left;
+        margin: 2px 0;
+        font-size: 13px;
+        color: #656c5c;
+      }
+      .nav.active {
+        background: #dfe6d3;
+        color: #344921;
+        font-weight: 600;
+      }
+      .nav:hover {
+        background: #e4e8dc;
+      }
+      .nav .count {
+        margin-left: auto;
+        font: 10px var(--mono);
+        background: #d0dbbf;
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
+      .sidebottom {
+        margin-top: auto;
+        padding-top: 35px;
+      }
+      .sidehint {
+        margin: 16px 8px 18px;
+        border-top: 1px solid #d8ddce;
+        padding-top: 17px;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .profile {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        padding: 9px;
+      }
+      .profile .avatar {
+        background: #ded9cc;
+        color: #645640;
+      }
+      .profile small {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+      }
+      .main {
+        margin-left: 226px;
+        width: calc(100% - 226px);
+      }
+      .topbar {
+        height: 72px;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 38px;
+        background: #fafbf6;
+        gap: 15px;
+      }
+      .crumb {
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--muted);
+      }
+      .crumb strong {
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .topright {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+      }
+      .search {
+        background: #f0f1eb;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        padding: 7px 10px;
+        gap: 8px;
+      }
+      .search input {
+        border: 0;
+        outline: none;
+        background: transparent;
+        width: 160px;
+        font-size: 12px;
+        color: var(--ink);
+      }
+      kbd {
+        font: 10px var(--mono);
+        border: 1px solid #d8ddce;
+        padding: 0 4px;
+        border-radius: 3px;
+        color: var(--muted);
+      }
+      .prototype {
+        font-size: 10px;
+        border: 1px solid #dddcca;
+        background: #f4f0dd;
+        color: #807044;
+        padding: 3px 7px;
+        border-radius: 4px;
+        white-space: nowrap;
+      }
+      .iconbtn {
+        background: transparent;
+        border: 0;
+        display: grid;
+        place-items: center;
+        padding: 8px;
+        border-radius: 6px;
+      }
+      .iconbtn:hover {
+        background: var(--soft);
+      }
+      .content {
+        max-width: 1470px;
+        margin: auto;
+        padding: 35px 38px 24px;
+      }
+      .heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 28px;
+      }
+      .heading .upper {
+        margin-bottom: 10px;
+      }
+      .heading p {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .actions {
+        display: flex;
+        gap: 9px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        border: 1px solid var(--line);
+        background: var(--paper);
+        border-radius: 7px;
+        padding: 9px 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 550;
+        white-space: nowrap;
+        text-decoration: none;
+      }
+      .btn.primary {
+        background: var(--olive);
+        color: #fff;
+        border-color: var(--olive);
+        box-shadow: 0 2px 3px #34492112;
+      }
+      .btn.primary:hover {
+        background: #43542e;
+      }
+      .btn:hover {
+        border-color: #adb69d;
+      }
+      .btn.subtle {
+        background: transparent;
+      }
+      .btn.danger {
+        color: var(--red);
+        border-color: #dfb6ae;
+      }
+      .textbtn {
+        border: 0;
+        background: transparent;
+        padding: 0;
+        color: var(--olive);
+        font-size: 12px;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+      }
+      .textbtn svg {
+        width: 14px;
+      }
+      .panel {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+      }
+      .panelpad {
+        padding: 23px;
+      }
+      .sectionhead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        margin-bottom: 18px;
+      }
+      .sectionhead small {
+        color: var(--muted);
+      }
+      .badge {
+        display: inline-flex;
+        gap: 5px;
+        align-items: center;
+        border-radius: 5px;
+        background: var(--soft);
+        color: #52663b;
+        padding: 3px 7px;
+        font-size: 10px;
+        white-space: nowrap;
+      }
+      .badge::before {
+        content: "";
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+      .badge.amber {
+        background: #faf0e4;
+        color: #a76c2b;
+      }
+      .badge.gray {
+        background: #f0f1ee;
+        color: #74786c;
+      }
+      .badge.red {
+        background: #f8e9e5;
+        color: var(--red);
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 23px;
+      }
+      .stat {
+        padding: 19px 21px;
+        position: relative;
+      }
+      .stat label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .stat strong {
+        display: block;
+        font-size: 30px;
+        line-height: 1.2;
+        letter-spacing: -1.4px;
+        font-weight: 500;
+        margin: 10px 0 8px;
+      }
+      .stat small {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      .stat > svg {
+        position: absolute;
+        right: 20px;
+        top: 21px;
+        color: #7b846d;
+      }
+      .stat .tinyline {
+        position: absolute;
+        bottom: 24px;
+        right: 20px;
+        display: flex;
+        gap: 3px;
+        height: 20px;
+        align-items: end;
+      }
+      .tinyline i {
+        width: 5px;
+        background: #dce5ce;
+        border-radius: 1px;
+      }
+      .gridmain {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 286px;
+        gap: 22px;
+        margin-bottom: 23px;
+      }
+      .journey {
+        padding: 25px;
+        background: #fff;
+      }
+      .journey h2 {
+        font-size: 19px;
+      }
+      .journey-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .journey-head p {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .route {
+        display: flex;
+        align-items: flex-start;
+        margin: 28px 0 24px;
+      }
+      .stage {
+        flex: 1;
+        position: relative;
+      }
+      .stage:not(:last-child):after {
+        content: "";
+        height: 1px;
+        background: #dde2d4;
+        position: absolute;
+        top: 15px;
+        left: 38px;
+        right: 10px;
+      }
+      .stagecircle {
+        border: 1px solid #dfe3d7;
+        background: #f7f8f3;
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        font: 11px var(--mono);
+        margin-bottom: 9px;
+        color: #818877;
+      }
+      .stage.done .stagecircle {
+        background: #eef3e6;
+        border-color: #d8e2c8;
+        color: #5b7340;
+      }
+      .stage.current .stagecircle {
+        background: #54663b;
+        color: #fff;
+        border: 4px solid #e6ecd9;
+        outline: 1px solid #8d9e76;
+      }
+      .stage strong {
+        font-size: 12px;
+        font-weight: 550;
+        display: block;
+      }
+      .stage small {
+        font-size: 10px;
+        color: var(--muted);
+        display: block;
+        margin-top: 4px;
+      }
+      .nextaction {
+        border: 1px solid #dfe5d4;
+        background: #f6f8f1;
+        padding: 15px 17px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        align-items: center;
+      }
+      .nextaction strong {
+        display: block;
+        font-size: 12px;
+      }
+      .nextaction p {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 4px;
+      }
+      .attention {
+        background: #f1eee5;
+        border: 1px solid #e5dfcf;
+        padding: 23px;
+        border-radius: var(--radius);
+      }
+      .attention > svg {
+        color: #9a814c;
+        margin-bottom: 12px;
+      }
+      .attention h2 {
+        font-size: 16px;
+      }
+      .attention > p {
+        font-size: 12px;
+        color: #807765;
+        margin: 8px 0 20px;
+      }
+      .attention-item {
+        padding: 12px 0;
+        border-top: 1px solid #ddd6c6;
+        font-size: 12px;
+        display: flex;
+        align-items: start;
+        gap: 9px;
+      }
+      .attention-item small {
+        display: block;
+        color: #807765;
+        font-size: 10px;
+        margin-top: 3px;
+      }
+      .attention .textbtn {
+        color: #7c653b;
+        margin-top: 15px;
+      }
+      .channels {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 17px;
+        margin-bottom: 25px;
+      }
+      .channel {
+        padding: 21px 23px;
+      }
+      .channelheader {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .channelname {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+      }
+      .channelname .symbol {
+        background: #eef2e6;
+        color: #53683c;
+        width: 31px;
+        height: 31px;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+      }
+      .channelname.canary .symbol {
+        background: #f6eddd;
+        color: #a5833b;
+      }
+      .channelname strong {
+        font-size: 15px;
+      }
+      .channelname small {
+        color: var(--muted);
+        font-size: 10px;
+        margin-left: 7px;
+      }
+      .snapshot {
+        font-size: 22px;
+        letter-spacing: -0.5px;
+        font-weight: 500;
+        margin: 17px 0 4px;
+      }
+      .snapshot code {
+        font-size: 11px;
+        margin-left: 8px;
+        color: var(--muted);
+      }
+      .channel p {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .channelfoot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 20px;
+        padding-top: 13px;
+        border-top: 1px solid var(--line);
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .tablewrap {
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        text-align: left;
+        white-space: nowrap;
+      }
+      th {
+        background: #fafbf7;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 500;
+        padding: 11px 21px;
+        border-bottom: 1px solid var(--line);
+      }
+      td {
+        padding: 15px 21px;
+        border-bottom: 1px solid #eff0eb;
+        font-size: 12px;
+      }
+      tr:last-child td {
+        border-bottom: 0;
+      }
+      .tabletitle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .tabletitle > svg {
+        color: var(--muted);
+      }
+      .tabletitle strong {
+        font-weight: 550;
+      }
+      .tabletitle small {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+        margin-top: 2px;
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        font-size: 10px;
+        color: #8b9081;
+        border-top: 1px solid var(--line);
+        margin-top: 25px;
+        padding: 16px 0 0;
+      }
+      .footer span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .footer i {
+        width: 5px;
+        height: 5px;
+        background: #8e9c7d;
+        border-radius: 50%;
+      }
+      .tabletoolbar {
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 21px;
+        border-bottom: 1px solid var(--line);
+      }
+      .tabs {
+        display: flex;
+        gap: 5px;
+      }
+      .tab {
+        border: 0;
+        background: transparent;
+        padding: 6px 11px;
+        font-size: 12px;
+        color: var(--muted);
+        border-radius: 5px;
+      }
+      .tab.active {
+        background: var(--soft);
+        color: var(--olive);
+      }
+      .hint {
+        background: #f0f3e9;
+        border: 1px solid #dfe5d3;
+        padding: 14px 18px;
+        border-radius: 8px;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        color: #5b684c;
+      }
+      .hint.amber {
+        background: #f9f0df;
+        border-color: #ecdfc4;
+        color: #8a6c37;
+      }
+      .detailgrid {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 22px;
+      }
+      .filelist {
+        margin-top: 16px;
+      }
+      .filelist div {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+      }
+      .filelist .selected {
+        background: var(--soft);
+        color: var(--olive);
+      }
+      .codeview {
+        background: #f8f9f4;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 20px;
+        overflow: auto;
+        font: 12px/2 var(--mono);
+        white-space: pre-wrap;
+        margin: 18px 0 0;
+      }
+      .diffline {
+        display: block;
+        padding: 3px 12px;
+        font: 12px/1.9 var(--mono);
+        overflow-wrap: anywhere;
+      }
+      .diffline.minus {
+        background: #fbefec;
+        color: #9d5147;
+      }
+      .diffline.plus {
+        background: #eff5e9;
+        color: #4d693b;
+      }
+      .diffhead {
+        padding: 13px 16px;
+        background: #fafbf7;
+        border-bottom: 1px solid var(--line);
+        font: 11px var(--mono);
+      }
+      .timeline {
+        border-left: 1px solid #dce2d0;
+        margin: 24px 7px;
+        padding: 0 0 0 23px;
+      }
+      .timelineitem {
+        position: relative;
+        padding-bottom: 24px;
+      }
+      .timelineitem:before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        background: #718557;
+        border: 4px solid white;
+        box-sizing: content-box;
+        border-radius: 50%;
+        position: absolute;
+        left: -31px;
+        top: 3px;
+      }
+      .timelineitem p {
+        font-size: 12px;
+      }
+      .timelineitem small {
+        color: var(--muted);
+        font-size: 10px;
+      }
+      .empty {
+        text-align: center;
+        padding: 55px 20px;
+        color: var(--muted);
+      }
+      .stepper {
+        display: flex;
+        margin-bottom: 25px;
+        gap: 8px;
+      }
+      .stepitem {
+        flex: 1;
+        border-bottom: 2px solid var(--line);
+        padding: 12px 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .stepitem.active {
+        border-color: var(--olive);
+        color: var(--olive);
+        font-weight: 600;
+      }
+      .stepitem span {
+        font: 10px var(--mono);
+        margin-right: 8px;
+      }
+      .wizardgrid {
+        display: grid;
+        grid-template-columns: 1fr 285px;
+        gap: 22px;
+      }
+      .summary {
+        padding: 23px;
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+      }
+      .summary dl {
+        font-size: 12px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 14px;
+        margin: 20px 0;
+      }
+      .summary dt {
+        color: var(--muted);
+      }
+      .summary dd {
+        margin: 0;
+      }
+      .summary .btn {
+        width: 100%;
+        margin-top: 15px;
+      }
+      .release-row {
+        display: flex;
+        padding: 19px 22px;
+        gap: 15px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+      }
+      input[type="checkbox"] {
+        accent-color: var(--olive);
+        width: 16px;
+        height: 16px;
+      }
+      .release-row .grow {
+        flex: 1;
+      }
+      .release-row p {
+        font-size: 12px;
+        font-weight: 550;
+      }
+      .release-row small {
+        font-size: 10px;
+        color: var(--muted);
+      }
+      select {
+        background: #f7f8f3;
+        border: 1px solid var(--line);
+        border-radius: 5px;
+        padding: 6px;
+        font-size: 11px;
+        max-width: 170px;
+      }
+      .check {
+        display: flex;
+        align-items: start;
+        gap: 9px;
+        font-size: 12px;
+        margin-top: 18px;
+      }
+      .check input {
+        flex-shrink: 0;
+      }
+      .wizardbottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 22px;
+        margin-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+      .settingsrow {
+        display: flex;
+        justify-content: space-between;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--line);
+        font-size: 12px;
+        align-items: center;
+      }
+      .settingsrow label small {
+        display: block;
+        color: var(--muted);
+        font-size: 11px;
+      }
+      .settingsrow input[type="text"] {
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        width: 150px;
+      }
+      .toggle {
+        width: 34px;
+        height: 20px;
+        border: 0;
+        border-radius: 20px;
+        background: #c2c7b8;
+        position: relative;
+      }
+      .toggle:after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        top: 3px;
+        left: 3px;
+        border-radius: 50%;
+        background: white;
+      }
+      .toggle[aria-checked="true"] {
+        background: var(--olive);
+      }
+      .toggle[aria-checked="true"]:after {
+        left: 17px;
+      }
+      .successmark {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        background: var(--soft);
+        display: grid;
+        place-items: center;
+        color: var(--olive);
+        margin-bottom: 20px;
+      }
+      .successmark svg {
+        width: 26px;
+        height: 26px;
+      }
+      .welcome {
+        padding: 35px;
+      }
+      .welcome p {
+        margin: 12px 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .welcome h2 {
+        font-size: 24px;
+      }
+      .mini-stats {
+        display: flex;
+        gap: 30px;
+        margin: 24px 0;
+        font-size: 12px;
+      }
+      .mini-stats strong {
+        display: block;
+        font-size: 23px;
+        font-weight: 500;
+      }
+      .menu {
+        display: none;
+      }
+      dialog {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 0;
+        box-shadow: 0 25px 100px #25331830;
+        color: var(--ink);
+        width: min(560px, calc(100% - 32px));
+        max-height: 85vh;
+      }
+      dialog::backdrop {
+        background: #1c241f55;
+        backdrop-filter: blur(3px);
+      }
+      .dialoghead {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 21px 26px;
+        border-bottom: 1px solid var(--line);
+      }
+      .dialogbody {
+        padding: 25px 26px;
+      }
+      .dialogbody p {
+        font-size: 13px;
+        color: var(--muted);
+        margin: 0 0 18px;
+      }
+      .dialogbody label {
+        display: block;
+        font-size: 12px;
+      }
+      .dialogbody textarea {
+        display: block;
+        width: 100%;
+        min-height: 85px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 10px;
+        margin-top: 8px;
+        resize: vertical;
+      }
+      .dialogfoot {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 17px 26px;
+        background: #fafbf7;
+        border-top: 1px solid var(--line);
+      }
+      .toast {
+        position: fixed;
+        bottom: 28px;
+        left: calc(50% + 90px);
+        transform: translateX(-50%);
+        z-index: 70;
+        background: #303e27;
+        color: #fff;
+        border: 1px solid #647454;
+        border-radius: 9px;
+        padding: 13px 21px;
+        box-shadow: 0 10px 30px #0002;
+        font-size: 12px;
+        max-width: 85vw;
+        display: none;
+      }
+      .toast.show {
+        display: block;
+        animation: enter 0.2s ease;
+      }
+      .guide-list {
+        padding-left: 20px;
+        font-size: 13px;
+        line-height: 2.2;
+      }
+      .guide-list li {
+        margin-bottom: 12px;
+      }
+      .reveal {
+        animation: enter 0.3s ease;
+      }
+      @keyframes enter {
+        from {
+          opacity: 0;
+          transform: translateY(7px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .overlay {
+        display: none;
+      }
+      .splitlabel {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        font-size: 11px;
+      }
+      .stack {
+        display: grid;
+        gap: 20px;
+      }
+      .comment {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 16px;
+      }
+      .progressbar {
+        height: 5px;
+        background: #e9ede1;
+        border-radius: 5px;
+        margin: 18px 0;
+      }
+      .progressbar span {
+        display: block;
+        height: 100%;
+        background: #7a8f5e;
+        border-radius: 5px;
+      }
+      .auditrow {
+        display: flex;
+        gap: 17px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        padding: 18px 22px;
+        font-size: 12px;
+      }
+      .auditrow > div {
+        flex: 1;
+      }
+      .auditrow small {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+      }
+      @media (min-width: 1600px) {
+        .content {
+          padding-top: 45px;
+        }
+        .journey {
+          padding: 30px;
+        }
+        .route {
+          margin: 34px 0;
+        }
+      }
+      @media (max-width: 1150px) {
+        .sidebar {
+          width: 200px;
+          padding-left: 12px;
+          padding-right: 12px;
+        }
+        .main {
+          margin-left: 200px;
+          width: calc(100% - 200px);
+        }
+        .content {
+          padding: 26px;
+        }
+        .topbar {
+          padding: 0 26px;
+        }
+        .gridmain {
+          grid-template-columns: minmax(0, 1fr) 240px;
+          gap: 15px;
+        }
+        .journey {
+          padding: 20px;
+        }
+        .stage small {
+          font-size: 9px;
+        }
+        .nextaction {
+          align-items: start;
+          flex-direction: column;
+        }
+        .search input {
+          width: 120px;
+        }
+        .wizardgrid {
+          grid-template-columns: 1fr 245px;
+        }
+        .stat {
+          padding: 15px;
+        }
+        .stat > svg {
+          right: 15px;
+        }
+        .stat .tinyline {
+          display: none;
+        }
+        .channelname small {
+          display: none;
+        }
+      }
+      @media (max-width: 900px) {
+        .gridmain,
+        .wizardgrid,
+        .detailgrid {
+          grid-template-columns: 1fr;
+        }
+        .attention {
+          display: none;
+        }
+        .summary {
+          position: static;
+        }
+        .heading {
+          align-items: start;
+        }
+        .stats {
+          gap: 10px;
+        }
+        .topright .search {
+          display: none;
+        }
+        .channel {
+          padding: 18px;
+        }
+        .route {
+          margin: 24px 0;
+        }
+        .nextaction {
+          flex-direction: row;
+          align-items: center;
+        }
+      }
+      @media (max-width: 650px) {
+        .sidebar {
+          transform: translateX(-100%);
+          transition: transform 0.2s;
+        }
+        .sidebar.open {
+          transform: translateX(0);
+        }
+        .overlay.open {
+          display: block;
+          position: fixed;
+          inset: 0;
+          background: #0005;
+          z-index: 29;
+        }
+        .main {
+          margin-left: 0;
+          width: 100%;
+        }
+        .menu {
+          display: grid;
+        }
+        .topbar {
+          height: 60px;
+          padding: 0 16px;
+        }
+        .topright {
+          gap: 4px;
+        }
+        .crumb {
+          gap: 6px;
+          font-size: 11px;
+        }
+        .content {
+          padding: 25px 17px;
+        }
+        .heading {
+          display: block;
+        }
+        .heading > .actions {
+          margin-top: 18px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+        .stat strong {
+          font-size: 27px;
+        }
+        .channels {
+          grid-template-columns: 1fr;
+        }
+        .footer {
+          gap: 20px;
+        }
+        .footer span:last-child {
+          display: none;
+        }
+        .stage strong {
+          font-size: 10px;
+        }
+        .stage small {
+          display: none;
+        }
+        .route {
+          margin: 25px 0;
+        }
+        .journey {
+          padding: 20px 15px;
+        }
+        .journey-head h2 {
+          font-size: 16px;
+        }
+        .nextaction {
+          display: block;
+        }
+        .nextaction .btn {
+          margin-top: 13px;
+        }
+        .toast {
+          left: 50%;
+          width: 85vw;
+          text-align: center;
+        }
+        .release-row {
+          padding: 17px 12px;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .release-row select {
+          max-width: 145px;
+        }
+        .stepitem {
+          font-size: 10px;
+        }
+        .stepitem span {
+          display: none;
+        }
+        .tabletoolbar {
+          flex-wrap: wrap;
+        }
+        .panelpad {
+          padding: 19px;
+        }
+        .heading p {
+          font-size: 12px;
+        }
+        .prototype {
+          font-size: 9px;
+        }
+        .dialogbody {
+          padding: 20px;
+        }
+        .heading .upper {
+          font-size: 9px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="overlay" onclick="menu(false)"></div>
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <span class="mark" id="brandicon"></span>skiva<small>BETA</small>
+        </div>
+        <div class="workspace">
+          <span class="avatar">LH</span>
+          <div><strong>凌河 · 工程团队</strong><small>团队工作空间</small></div>
+        </div>
+        <nav id="navigation"></nav>
+        <div class="sidebottom">
+          <button class="nav" onclick="guide()" id="helpnav"></button
+          ><button class="nav" onclick="resetDemo()" id="resetnav"></button>
+          <div class="sidehint">
+            让每一次 Skill 更新，<br />都成为一次可追溯的交付。
+          </div>
+          <div class="profile">
+            <span class="avatar">Z</span>
+            <div>
+              <strong style="font-size: 12px">Haixin Zhou</strong
+              ><small>组织管理员 · 示例身份</small>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <main class="main">
+        <header class="topbar">
+          <div class="crumb">
+            <button
+              class="iconbtn menu"
+              onclick="menu(true)"
+              aria-label="打开导航"
+              id="menubtn"
+            ></button
+            ><span>工作空间</span><span>/</span
+            ><strong id="breadcrumb">交付概览</strong>
+          </div>
+          <div class="topright">
+            <form
+              class="search"
+              onsubmit="
+                event.preventDefault();
+                searchSkills(this.query.value);
+              "
+            >
+              <span id="searchicon"></span
+              ><input
+                name="query"
+                placeholder="搜索 Skills…"
+                aria-label="搜索 Skills"
+              /><kbd>⌘ K</kbd>
+            </form>
+            <span class="prototype">交互原型 · 模拟数据</span
+            ><button
+              class="iconbtn"
+              onclick="guide()"
+              aria-label="原型体验指引"
+              id="guidebtn"
+            ></button>
+          </div>
+        </header>
+        <div class="content" id="app"></div>
+      </main>
+    </div>
+    <dialog id="modal" aria-labelledby="dialogtitle">
+      <div class="dialoghead">
+        <h2 id="dialogtitle"></h2>
+        <button class="iconbtn" onclick="closeModal()" aria-label="关闭弹窗">
+          ✕
+        </button>
+      </div>
+      <div class="dialogbody" id="dialogbody"></div>
+      <div class="dialogfoot" id="dialogfoot"></div>
+    </dialog>
+    <div class="toast" role="status" aria-live="polite" id="toast"></div>
+    <script>
+      const paths = {
+        grid: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
+        layers: "m12 3 10 5-10 5L2 8z M2 12l10 5 10-5 M2 16l10 5 10-5",
+        git: "M6 6v12 M6 8c0 5 12 0 12 6v4 M4 3h4v4H4z M4 18h4v4H4z M16 18h4v4h-4z",
+        book: "M12 5v15 M3 4h5l4 2 4-2h5v15h-5l-4 2-4-2H3z",
+        activity: "M2 12h4l3-8 5 16 3-8h5",
+        arrow: "M5 12h14 M14 7l5 5-5 5",
+        up: "M6 18 18 6 M7 6h11v11",
+        check: "m5 12 4 4L19 6",
+        plus: "M12 4v16 M4 12h16",
+        clock: "M12 7v5l3 2 M21 12a9 9 0 1 0-18 0 9 9 0 0 0 18 0",
+        agent: "M3 4h18v13H3z M8 21h8 M12 17v4 M7 9l3 3-3 2 M13 13h4",
+        shield: "m12 2 8 4v6c0 5-8 10-8 10S4 17 4 12V6z M8 12l3 3 5-6",
+        settings: "M4 7h16 M4 17h16 M8 4v6 M16 14v6",
+        search: "M16 16l5 5 M18 10a8 8 0 1 0-16 0 8 8 0 0 0 16 0",
+        help: "M9 8a3 3 0 1 1 5 2l-2 2v2 M12 17h.01 M21 12a9 9 0 1 0-18 0 9 9 0 0 0 18 0",
+        refresh: "M3 5v5h5 M3 10a9 9 0 1 1 2 8",
+        menu: "M4 6h16 M4 12h16 M4 18h16",
+        alert: "m12 3 10 18H2z M12 9v5 M12 17h.01",
+        lock: "M5 10h14v11H5z M8 10V6a4 4 0 0 1 8 0v4",
+        branch: "M6 3v18 M6 16c8 0 12-5 12-12 M15 4h6 M3 3h6",
+        file: "M5 2h9l5 5v15H5z M14 2v6h5 M8 12h8 M8 16h5",
+        back: "M19 12H5 M10 7l-5 5 5 5",
+      };
+      function icon(n) {
+        return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[n] || paths.layers}"/></svg>`;
+      }
+      function esc(s) {
+        return String(s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      const navs = [
+        ["overview", "交付概览", "grid"],
+        ["releases", "发布中心", "layers"],
+        ["skills", "Skills 目录", "book"],
+        ["repositories", "Git 仓库", "git"],
+        ["pipelines", "流水线", "activity"],
+        ["agents", "Agent 接入", "agent"],
+        ["audit", "审计记录", "shield"],
+      ];
+      let state = {
+        page: "overview",
+        step: 1,
+        created: false,
+        canary: 23,
+        stable: 23,
+        verified: false,
+        ack: false,
+        selected: [true, true, true],
+        version: "new",
+        query: "",
+        filter: "all",
+        events: [],
+        pipeline: "success",
+        root: "skills",
+        strict: true,
+        notice: true,
+      };
+      let focusBeforeModal;
+      const skillData = [
+        {
+          name: "expense-policy",
+          desc: "报销审批规则与额度判断",
+          sha: "a8f21c9",
+          type: "有更新",
+          files: 3,
+        },
+        {
+          name: "code-review",
+          desc: "代码审查规范与风险检查",
+          sha: "c317f0b",
+          type: "已发布",
+          files: 5,
+        },
+        {
+          name: "sql-query",
+          desc: "只读 SQL 查询与结果解释",
+          sha: "e9a12d4",
+          type: "已发布",
+          files: 4,
+        },
+      ];
+      function toast(t) {
+        const x = document.getElementById("toast");
+        x.textContent = t;
+        x.classList.add("show");
+        clearTimeout(window.tt);
+        window.tt = setTimeout(() => x.classList.remove("show"), 3800);
+      }
+      function menu(open) {
+        document.querySelector(".sidebar").classList.toggle("open", open);
+        document.querySelector(".overlay").classList.toggle("open", open);
+      }
+      function go(p) {
+        state.page = p;
+        menu(false);
+        render();
+        window.scrollTo({ top: 0, behavior: "instant" });
+      }
+      function searchSkills(q) {
+        state.query = q;
+        go("skills");
+      }
+      function resetDemo() {
+        state = {
+          ...state,
+          page: "overview",
+          step: 1,
+          created: false,
+          canary: 23,
+          stable: 23,
+          verified: false,
+          ack: false,
+          selected: [true, true, true],
+          version: "new",
+          query: "",
+          filter: "all",
+          events: [],
+          pipeline: "success",
+          root: "skills",
+          strict: true,
+          notice: true,
+        };
+        render();
+        toast("演示已重置，所有操作仅保存在当前页面内存中");
+      }
+      function footer() {
+        return `<footer class="footer"><span><i></i>本地交互原型 · 不连接后端、不修改真实数据</span><span>SKIVA DESIGN PROPOSAL / 01</span></footer>`;
+      }
+      function head(k, title, desc, buttons = "") {
+        return `<div class="heading"><div><div class="upper">${k}</div><h1>${title}</h1><p>${desc}</p></div><div class="actions">${buttons}</div></div>`;
+      }
+      function btn(text, action, primary = false, i = "") {
+        return `<button class="btn ${primary ? "primary" : ""}" onclick="${action}">${i ? icon(i) : ""}${text}</button>`;
+      }
+      function badge(t, c = "") {
+        return `<span class="badge ${c}">${t}</span>`;
+      }
+      function channel(c) {
+        const stable = c === "stable",
+          n = state[c];
+        return `<article class="panel channel"><div class="channelheader"><div class="channelname ${stable ? "" : "canary"}"><span class="symbol">${icon(stable ? "shield" : "branch")}</span><strong>${stable ? "Stable" : "Canary"}</strong><small>${stable ? "正式渠道" : "验证渠道"}</small></div>${badge(stable ? "正式交付" : n === 24 ? "待验证" : "已同步", stable ? "" : "amber")}</div><div class="snapshot">快照 #0${n}<code>${n === 24 ? "b9e42d7" : "74ac901"}</code></div><p>${n === 24 ? "报销额度规则更新 · " + state.selected.filter(Boolean).length + " Skills" : "团队基础技能集 · 3 Skills"} · 不可变快照</p><div class="channelfoot"><span>${stable ? "2 个关联 Profile" : "1 个关联 Profile"}</span><button class="textbtn" onclick="${stable && n === 24 ? "confirmAction('rollback')" : "go('releases')"}">${stable && n === 24 ? "回滚到 #023" : "查看发布"} ${icon("arrow")}</button></div></article>`;
+      }
+      function overview() {
+        let next =
+          state.stable === 24
+            ? "此次发布已完成"
+            : state.canary === 24
+              ? state.verified
+                ? "将已验证快照推进 Stable"
+                : "验证 Agent 的实际行为"
+              : state.created
+                ? "将快照推进 Canary"
+                : "把候选版本组成完整快照";
+        let action = state.created ? "go('releases')" : "startRelease()";
+        return (
+          head(
+            "DELIVERY WORKSPACE",
+            "每次更新，都有把握。",
+            "从 Git 提交到 Agent 生效，在一个工作台里看清交付进度。",
+            btn("查看指引", "guide()", false, "help") +
+              btn(
+                state.created ? "继续此次发布" : "准备新发布",
+                action,
+                true,
+                "plus",
+              ),
+          ) +
+          `<div class="stats">${[
+            ["可用 Skills", "3", "1 个候选更新", "book"],
+            [
+              "正式快照",
+              "#0" + state.stable,
+              "Stable · " +
+                (state.stable === 24
+                  ? state.selected.filter(Boolean).length
+                  : 3) +
+                " 个 Skills",
+              "layers",
+            ],
+            ["已授权客户端", "3", "2 dynamic / 1 pinned", "agent"],
+            [
+              "待处理事项",
+              state.stable === 24 ? "1" : "2",
+              "包含 1 个固定版本提醒",
+              "activity",
+            ],
+          ]
+            .map(
+              (s, i) =>
+                `<div class="panel stat"><label>${s[0]}</label>${icon(s[3])}<strong>${s[1]}</strong><small>${s[2]}</small></div>`,
+            )
+            .join(
+              "",
+            )}</div><div class="gridmain"><section class="panel journey"><div class="journey-head"><div><h2>这次交付，走到哪一步了？</h2><p>expense-policy <span class="mono">/ a8f21c9</span></p></div>${badge(state.stable === 24 ? "已完成" : "进行中")}</div><div class="route">${[
+            "提交变更",
+            "校验通过",
+            "创建快照",
+            "Canary 验证",
+            "Stable 发布",
+          ]
+            .map((s, i) => {
+              let step =
+                state.stable === 24
+                  ? 5
+                  : state.canary === 24
+                    ? state.verified
+                      ? 3
+                      : 2
+                    : state.created
+                      ? 2
+                      : 1;
+              return `<div class="stage ${i <= step ? "done" : ""} ${i === step + 1 ? "current" : ""}"><div class="stagecircle">${i <= step ? icon("check") : String(i + 1).padStart(2, "0")}</div><strong>${s}</strong><small>${["main · a8f21c9", "全部检查通过", state.created ? "快照 #024" : "准备完整集合", state.verified ? "已人工确认" : "小范围验证", state.stable === 24 ? "已正式交付" : "复用同一快照"][i]}</small></div>`;
+            })
+            .join(
+              "",
+            )}</div><div class="nextaction"><div><strong>${next}</strong><p>${state.stable === 24 ? "可以在审计记录中追溯本次发布。" : "下一步明确可见，构建成功不会自动修改线上渠道。"}</p></div>${btn(state.created ? "查看发布进度" : "准备发布", action, true, "arrow")}</div></section><aside class="attention">${icon("alert")}<h2>值得你关注</h2><p>先解决影响交付的事项。</p><div class="attention-item">${icon("lock")}<div>1 个客户端固定在旧快照<small>finance-batch · pinned 模式</small></div></div><div class="attention-item">${icon("layers")}<div>${state.stable === 24 ? "此次变更已正式发布" : "1 个 Skill 有可发布更新"}<small>expense-policy · 额度规则变更</small></div></div><button class="textbtn" onclick="go('agents')">查看接入状态 ${icon("arrow")}</button></aside></div><div class="sectionhead"><h2>渠道视图</h2><button class="textbtn" onclick="go('releases')">进入发布中心 ${icon("arrow")}</button></div><div class="channels">${channel("stable")}${channel("canary")}</div><div class="sectionhead"><h2>最近的变更</h2><button class="textbtn" onclick="go('pipelines')">全部流水线 ${icon("arrow")}</button></div>${pipelineTable()}`
+        );
+      }
+      function pipelineTable() {
+        return `<div class="panel tablewrap"><table><thead><tr><th>仓库 / 变更</th><th>提交</th><th>校验结果</th><th>候选内容</th><th>时间</th><th></th></tr></thead><tbody><tr><td><div class="tabletitle">${icon("git")}<div><strong>team/finance-skills</strong><small>提高报销审批额度至 200 元</small></div></div></td><td><code>a8f21c9</code></td><td>${badge(state.pipeline === "success" ? "校验通过" : "校验失败", state.pipeline === "success" ? "" : "red")}</td><td>expense-policy</td><td class="muted">12 分钟前</td><td><button class="textbtn" onclick="pipelineDetail()">详情 ${icon("arrow")}</button></td></tr><tr><td><div class="tabletitle">${icon("git")}<div><strong>team/developer-skills</strong><small>完善代码审查检查清单</small></div></div></td><td><code>c317f0b</code></td><td>${badge("校验通过")}</td><td>code-review</td><td class="muted">2 小时前</td><td><button class="textbtn" onclick="skillDetail('code-review')">查看 Skill</button></td></tr></tbody></table></div>`;
+      }
+      function startRelease() {
+        if (state.created) {
+          go("releases");
+          return;
+        }
+        state.step = 1;
+        state.ack = false;
+        state.page = "compose";
+        render();
+        window.scrollTo(0, 0);
+      }
+      function releases() {
+        return (
+          head(
+            "RELEASE MANAGEMENT",
+            "发布中心",
+            "快照记录“发布什么”，渠道决定“交付给谁”。",
+            btn("发布流程", "guide()", false, "help") +
+              btn(
+                state.created ? "查看当前快照" : "创建快照",
+                state.created
+                  ? "snapshotDetail(state.created?24:23)"
+                  : "startRelease()",
+                true,
+                "plus",
+              ),
+          ) +
+          `<div class="channels">${channel("stable")}${channel("canary")}</div>${state.created ? `<section class="panel panelpad" style="margin-bottom:24px"><div class="sectionhead"><div><h2>快照 #024 <span class="badge">${state.stable === 24 ? "已发布 Stable" : state.canary === 24 ? "Canary 验证中" : "待交付"}</span></h2><p class="muted" style="font-size:12px;margin-top:6px">${state.selected[0] && state.version === "new" ? "expense-policy 更新" : "所选内容已组成快照"} · ${state.selected.filter(Boolean).length} 个 Skills</p></div><code class="muted">b9e42d7</code></div><div class="hint">${icon("lock")}固定在 #023 的 finance-batch 不会随渠道更新；需在任务结束后显式重新固定。</div><div class="actions">${state.canary !== 24 ? btn("推进 Canary", "confirmAction('canary')", true, "arrow") : state.stable !== 24 ? btn("推进 Stable", "confirmAction('stable')", true, "arrow") : btn("查看审计记录", "go('audit')", false, "shield")}${state.canary === 24 && state.stable !== 24 ? btn("记录人工验证结果", "verifyDialog()", false, "check") : ""}${btn("查看完整快照", "snapshotDetail(state.created?24:23)")}</div>${state.canary === 24 && !state.verified ? '<p class="comment">尚未记录人工验证结果。请先检查 Agent 实际行为；此检查在原型中仅作流程引导。</p>' : ""}</section>` : `<div class="hint">${icon("layers")}expense-policy 已通过校验，有一个候选版本尚未组成快照。<button class="textbtn" onclick="startRelease()">准备发布 →</button></div>`}<div class="sectionhead"><h2>快照历史</h2><small>不可变 · 可追溯 · 可回滚</small></div><div class="panel tablewrap"><table><thead><tr><th>快照</th><th>内容</th><th>渠道引用</th><th>创建者</th><th>操作</th></tr></thead><tbody>${(state.created ? [24, 23] : [23]).map((n) => `<tr><td><strong>#0${n}</strong><small class="muted" style="display:block">${n === 24 ? "本次原型操作" : "今天 09:42"}</small></td><td>${n === 24 ? "报销额度规则更新" : "团队基础技能集"}<small class="muted" style="display:block">${n === 24 ? state.selected.filter(Boolean).length : 3} Skills · ${n === 24 ? skillData.reduce((sum, v, i) => sum + (state.selected[i] ? v.files : 0), 0) : 12} 个文件</small></td><td>${state.stable === n ? badge("Stable") : ""} ${state.canary === n ? badge("Canary", "amber") : ""}${state.stable !== n && state.canary !== n ? badge("历史快照", "gray") : ""}</td><td>Haixin Zhou</td><td><button class="textbtn" onclick="snapshotDetail(${n})">查看快照 ${icon("arrow")}</button></td></tr>`).join("")}</tbody></table></div>`
+        );
+      }
+      function compose() {
+        let count = state.selected.filter(Boolean).length;
+        return (
+          head(
+            "RELEASE / NEW SNAPSHOT",
+            "准备一次可控的发布",
+            "以 Stable 当前快照为基线，保留已有 Skills，仅替换需要更新的版本。",
+            btn("返回发布中心", "go('releases')", false, "back"),
+          ) +
+          `<div class="stepper">${["选择完整集合", "审阅版本差异", "创建不可变快照"].map((s, i) => `<div class="stepitem ${state.step === i + 1 ? "active" : ""}"><span>0${i + 1}</span>${s}</div>`).join("")}</div><div class="wizardgrid"><div>${state.step === 1 ? `<div class="hint">${icon("layers")}已载入 Stable #023 的 3 个 Skills。取消勾选意味着从新快照中移除。</div><div class="panel"><div class="tabletoolbar"><h3>发布内容</h3><span class="muted" style="font-size:11px">${count} 个已选 · 完整集合</span></div>${skillData.map((s, i) => `<div class="release-row"><input type="checkbox" aria-label="包含 ${s.name}" ${state.selected[i] ? "checked" : ""} onchange="state.selected[${i}]=this.checked;state.ack=false;render()"><div class="grow"><p>${s.name}</p><small>${s.desc}</small></div>${i === 0 ? `<select aria-label="expense-policy 版本" onchange="state.version=this.value;state.ack=false;render()"><option value="new" ${state.version === "new" ? "selected" : ""}>a8f21c9 · 新版</option><option value="old" ${state.version === "old" ? "selected" : ""}>61b3e20 · 当前正式</option></select>` : `<code class="muted">${s.sha} · 保留</code>`}</div>`).join("")}</div>${count < 3 ? `<div class="hint amber" style="margin-top:18px">${icon("alert")}你将移除 ${3 - count} 个 Skills。请确认依赖这些内容的 Agent 可以继续工作。</div>` : ""}` : state.step === 2 ? `<section class="panel panelpad"><div class="sectionhead"><h2>与 Stable #023 比较</h2><span class="badge">${state.selected[0] && state.version === "new" ? "1 项更新" : "0 项更新"}</span></div>${state.selected[0] && state.version === "new" ? `<div class="panel"><div class="diffhead">expense-policy / SKILL.md</div><span class="diffline"># Expense policy</span><span class="diffline minus">− Limit: 100 yuan.</span><span class="diffline plus">+ Limit: 200 yuan.</span><span class="diffline">Valid receipts are required.</span></div>` : '<p class="muted">没有版本内容更新。</p>'}<div class="mini-stats"><div><strong>${count}</strong>保留在快照中</div><div><strong>${3 - count}</strong>从快照移除</div></div>${state.selected.map((s, i) => (!s ? `<div class="hint amber">移除 ${skillData[i].name}</div>` : "")).join("")}<div class="hint">${icon("agent")}推进 Canary 后影响测试 Profile；创建快照本身不会改变任何客户端。</div><label class="check"><input type="checkbox" ${state.ack ? "checked" : ""} onchange="state.ack=this.checked;document.getElementById('nextstep').disabled=!this.checked">我已审阅差异、移除项和所选版本的安全诊断。</label></section>` : `<section class="panel welcome"><div class="successmark">${icon("layers")}</div><h2>内容已就绪，创建发布凭据。</h2><p>新快照包含 ${count} 个 Skills，创建后内容不可修改。<br>下一步仍需显式推进 Canary，不会自动上线。</p><div class="hint">${icon("shield")}当前基线：Stable #023 · 原型仅模拟写入</div></section>`}<div class="wizardbottom">${btn(state.step === 1 ? "取消" : "上一步", state.step === 1 ? "go('releases')" : "previousStep()", false, "back")}<span class="muted" style="font-size:11px">步骤 ${state.step} / 3</span></div></div><aside class="panel summary"><div class="upper">RELEASE SUMMARY</div><h2 style="margin-top:9px">发布摘要</h2><dl><dt>基线</dt><dd>Stable #023</dd><dt>完整集合</dt><dd>${count} Skills</dd><dt>更新</dt><dd>${state.selected[0] && state.version === "new" ? 1 : 0} 个版本</dd><dt>移除</dt><dd style="color:${count < 3 ? "var(--red)" : "inherit"}">${3 - count} 项</dd><dt>下一交付目标</dt><dd>Canary</dd></dl><div style="border-top:1px solid var(--line);padding-top:16px;font-size:11px;color:var(--muted)">发布后保持同一快照，从 Canary 验证再推进 Stable。</div><button id="nextstep" class="btn primary" ${count === 0 || (state.step === 2 && !state.ack) ? "disabled" : ""} onclick="nextStep()">${state.step === 1 ? "审阅差异" : state.step === 2 ? "确认发布内容" : "创建快照"} ${icon("arrow")}</button></aside></div>`
+        );
+      }
+      function previousStep() {
+        state.step--;
+        render();
+      }
+      function nextStep() {
+        if (!state.selected.some(Boolean) || (state.step === 2 && !state.ack))
+          return;
+        if (state.step < 3) {
+          state.step++;
+          render();
+        } else {
+          state.created = true;
+          state.events.unshift("创建不可变快照 #024");
+          go("releases");
+          toast("快照 #024 已创建，渠道尚未改变");
+        }
+      }
+      function skills() {
+        let list = skillData
+          .filter(
+            (s) => s.name.includes(state.query) || s.desc.includes(state.query),
+          )
+          .filter(
+            (s) => state.filter !== "update" || s.name === "expense-policy",
+          );
+        return (
+          head(
+            "SKILL REGISTRY",
+            "Skills 目录",
+            "把内容、来源版本和发布状态放在一起，快速找到可用的 Skill。",
+            btn("准备发布", "startRelease()", true, "plus"),
+          ) +
+          `<div class="panel"><div class="tabletoolbar"><div class="tabs"><button class="tab ${state.filter === "all" ? "active" : ""}" onclick="state.filter='all';render()">全部 3</button><button class="tab ${state.filter === "update" ? "active" : ""}" onclick="state.filter='update';render()">有更新 1</button></div><div class="search">${icon("search")}<input id="skillsearch" aria-label="筛选 Skills" placeholder="名称或描述" value="${esc(state.query)}" oninput="filterSkills(this)"></div></div><div id="skillresults">${skillRows(list)}</div></div><p class="comment">点击 Skill 查看文件、当前版本和候选差异。版本使用来源提交标识，不强加语义化版本号。</p>`
+        );
+      }
+      function skillRows(list) {
+        return list.length
+          ? `<div class="tablewrap"><table><thead><tr><th>Skill</th><th>候选提交</th><th>发布状态</th><th>文件</th><th></th></tr></thead><tbody>${list.map((s) => `<tr><td><div class="tabletitle">${icon("book")}<div><strong>${s.name}</strong><small>${s.desc}</small></div></div></td><td><code>${s.sha}</code></td><td>${badge(s.type, s.type === "有更新" ? "amber" : "")}</td><td>${s.files} 个文件</td><td><button class="textbtn" onclick="skillDetail('${s.name}')">查看内容 ${icon("arrow")}</button></td></tr>`).join("")}</tbody></table></div>`
+          : '<div class="empty">没有匹配的 Skills。试试 expense、code 或 sql。</div>';
+      }
+      function filterSkills(input) {
+        state.query = input.value;
+        document.getElementById("skillresults").innerHTML = skillRows(
+          skillData.filter(
+            (s) =>
+              (s.name.includes(state.query) || s.desc.includes(state.query)) &&
+              (state.filter !== "update" || s.name === "expense-policy"),
+          ),
+        );
+      }
+      function agents() {
+        return (
+          head(
+            "AGENT DELIVERY",
+            "Agent 接入",
+            "看清每个客户端的授权范围，以及它是否跟随渠道更新。",
+            btn("查看接入步骤", "agentGuide()", true, "plus"),
+          ) +
+          `<div class="hint amber">${icon("lock")}finance-batch 固定在 #023。这是预期的任务一致性行为，不代表更新失败。</div><div class="panel tablewrap"><table><thead><tr><th>客户端 / Profile</th><th>渠道</th><th>模式</th><th>目标快照</th><th>授权状态</th><th></th></tr></thead><tbody>${[
+            [
+              "finance-agent",
+              "finance-canary",
+              "Canary",
+              "dynamic",
+              state.canary,
+            ],
+            [
+              "developer-agent",
+              "engineering-stable",
+              "Stable",
+              "dynamic",
+              state.stable,
+            ],
+            ["finance-batch", "finance-pinned", "Stable", "pinned", 23],
+          ]
+            .map(
+              (a) =>
+                `<tr><td><div class="tabletitle">${icon("agent")}<div><strong>${a[0]}</strong><small>${a[1]}</small></div></div></td><td>${a[2]}</td><td>${badge(a[3], a[3] === "pinned" ? "amber" : "gray")}</td><td><code>#0${a[4]}</code></td><td>${badge("已授权")}</td><td><button class="textbtn" onclick="agentDetail('${a[0]}','${a[3]}',${a[4]})">查看 ${icon("arrow")}</button></td></tr>`,
+            )
+            .join(
+              "",
+            )}</tbody></table></div><div class="gridmain" style="margin-top:22px"><section class="panel panelpad"><h2>文件更新之后，还需要验证什么？</h2><div class="timeline"><div class="timelineitem"><p>确认客户端获得目标快照</p><small>使用 skills-mount status 检查实际挂载状态。</small></div><div class="timelineitem"><p>让 Agent 开启新任务或重新加载 Skill</p><small>挂载内容更新，不等于已加载的上下文自动更新。</small></div><div class="timelineitem"><p>用实际输入确认行为</p><small>例如：150 元报销，在新规则下应通过审批。</small></div></div></section><div class="panel panelpad"><div class="upper">MODE GUIDE</div><h2 style="margin-top:12px">dynamic / pinned</h2><p class="comment">dynamic 跟随渠道，新打开的文件使用新索引。</p><p class="comment">pinned 保持任务快照。任务结束后，才显式重新固定。</p></div></div><p class="comment">表格展示授权与目标状态，不将其宣称为真实终端在线或 Agent 已生效状态。</p>`
+        );
+      }
+      function repositories() {
+        return (
+          head(
+            "CONTENT SOURCES",
+            "Git 仓库",
+            "原生托管与外部仓库统一管理，提交校验后进入 Skills 目录。",
+            btn("接入仓库", "repoGuide()", true, "plus"),
+          ) +
+          `<div class="panel tablewrap"><table><thead><tr><th>仓库</th><th>来源</th><th>分支 / 扫描目录</th><th>最近校验</th><th></th></tr></thead><tbody>${[
+            ["team/finance-skills", "平台托管", "a8f21c9"],
+            ["team/developer-skills", "外部 Git", "c317f0b"],
+          ]
+            .map(
+              (r, i) =>
+                `<tr><td><div class="tabletitle">${icon("git")}<div><strong>${r[0]}</strong><small>${i ? "代码审查与 SQL 查询" : "报销审批 Skills"}</small></div></div></td><td>${badge(r[1], i ? "gray" : "")}</td><td><code>main / skills/</code></td><td>${badge("校验通过")}</td><td><button class="textbtn" onclick="go('pipelines')">查看流水线 ${icon("arrow")}</button></td></tr>`,
+            )
+            .join(
+              "",
+            )}</tbody></table></div><div class="panel panelpad" style="margin-top:22px"><div class="sectionhead"><h2>首次接入只需三步</h2><button class="textbtn" onclick="repoGuide()">展开说明 ${icon("arrow")}</button></div><div class="route">${["创建或连接 Git 仓库", "提交 SKILL.md", "检查流水线结果"].map((v, i) => `<div class="stage"><div class="stagecircle">0${i + 1}</div><strong>${v}</strong><small>${["选择内容来源", "明确 name 与 description", "通过后得到候选版本"][i]}</small></div>`).join("")}</div></div>`
+        );
+      }
+      function pipelines() {
+        return (
+          head(
+            "VALIDATION PIPELINE",
+            "流水线",
+            "明确校验范围，定位失败原因，再回到对应的 Git 提交修复。",
+            btn(
+              "切换失败示例",
+              "state.pipeline=state.pipeline==='success'?'failed':'success';render()",
+              false,
+              "activity",
+            ) + btn("配置校验规则", "pipelineSettings()", true, "settings"),
+          ) +
+          `<div class="hint">${icon("shield")}流水线执行固定的静态校验步骤，不执行仓库内自定义脚本。</div>${pipelineTable()}<section class="panel panelpad" style="margin-top:22px"><div class="sectionhead"><h2>team/finance-skills · 最近运行</h2><code class="muted">a8f21c9</code></div><div class="route">${["读取固定提交", "发现 Skills", "校验内容", "保存制品"].map((s, i) => `<div class="stage ${state.pipeline === "failed" && i >= 2 ? "" : "done"}"><div class="stagecircle">${state.pipeline === "failed" && i >= 2 ? i + 1 : icon("check")}</div><strong>${s}</strong><small>${state.pipeline === "failed" && i === 2 ? "发现错误" : state.pipeline === "failed" && i === 3 ? "未执行" : "已完成"}</small></div>`).join("")}</div>${state.pipeline === "failed" ? `<div class="hint amber">${icon("alert")}SKILL.md 缺少 description 字段；当前运行不会产生可发布的新版本。</div><div class="codeview">skills/expense-policy/SKILL.md:3\nSKILL_METADATA: SKILL.md requires name and description.\n\n修复：在 YAML frontmatter 补充用途说明，提交后重新触发校验。</div>` : `<div class="hint">${icon("check")}校验完成。已生成 expense-policy 候选版本，可以加入下一次发布。</div>${btn("准备发布", "startRelease()", true, "arrow")}`}</section>`
+        );
+      }
+      function audit() {
+        return (
+          head(
+            "AUDIT TRAIL",
+            "审计记录",
+            "把操作人、目标快照和变更原因连起来，让发布过程可追溯。",
+          ) +
+          `<div class="panel">${[...state.events, "流水线校验通过 · a8f21c9", "创建基础快照 #023", "将 #023 推进 Stable"].map((e, i) => `<div class="auditrow">${icon("shield")}<div>${esc(e)}<small>Haixin Zhou · ${i < state.events.length ? "本次模拟操作" : "示例历史记录"}</small></div>${badge("成功")}<code class="muted">${String(i + 1).padStart(3, "0")}</code></div>`).join("")}</div>`
+        );
+      }
+      function render() {
+        document.getElementById("breadcrumb").textContent =
+          state.page === "compose"
+            ? "发布中心 / 创建快照"
+            : navs.find((x) => x[0] === state.page)?.[1] || "交付概览";
+        document.getElementById("navigation").innerHTML = navs
+          .map(
+            (n, i) =>
+              `${i === 0 ? '<div class="navlabel">工作台</div>' : i === 2 ? '<div class="navlabel">内容与校验</div>' : i === 5 ? '<div class="navlabel">交付与治理</div>' : ""}<button class="nav ${state.page === n[0] || (state.page === "compose" && n[0] === "releases") ? "active" : ""}" ${state.page === n[0] ? 'aria-current="page"' : ""} onclick="go('${n[0]}')">${icon(n[2])}<span>${n[1]}</span>${n[0] === "releases" && !state.created ? '<span class="count">1</span>' : ""}</button>`,
+          )
+          .join("");
+        const views = {
+          overview,
+          releases,
+          compose,
+          skills,
+          repositories,
+          pipelines,
+          agents,
+          audit,
+        };
+        document.getElementById("app").innerHTML =
+          `<div class="reveal">${views[state.page]()}${footer()}</div>`;
+      }
+      function openModal(title, body, buttons = "") {
+        focusBeforeModal = document.activeElement;
+        document.getElementById("dialogtitle").textContent = title;
+        document.getElementById("dialogbody").innerHTML = body;
+        document.getElementById("dialogfoot").innerHTML =
+          buttons || btn("知道了", "closeModal()", true);
+        const m = document.getElementById("modal");
+        if (!m.open) m.showModal();
+      }
+      function closeModal() {
+        document.getElementById("modal").close();
+        if (focusBeforeModal?.isConnected) focusBeforeModal.focus();
+      }
+      document.getElementById("modal").addEventListener("click", (e) => {
+        if (e.target === e.currentTarget) {
+          let r = e.currentTarget.getBoundingClientRect();
+          if (
+            e.clientX < r.left ||
+            e.clientX > r.right ||
+            e.clientY < r.top ||
+            e.clientY > r.bottom
+          )
+            closeModal();
+        }
+      });
+      function guide() {
+        openModal(
+          "用一次发布，体验新工作台",
+          `<p>这是可点击的设计原型。所有数据和发布操作都是模拟的，刷新页面会恢复初始状态。</p><ol class="guide-list"><li><strong>准备发布：</strong>从当前 Stable 继承完整集合，把 expense-policy 换成新版。</li><li><strong>审阅差异：</strong>查看 100 → 200 元的规则变更，确认后创建快照。</li><li><strong>验证再发布：</strong>推进 Canary，记录人工验证结果，再推进 Stable。</li><li><strong>确认边界：</strong>到 Agent 接入查看 dynamic 与 pinned 的差别，或回滚到 #023。</li></ol><p>还可以体验 Skills 搜索、流水线失败诊断和校验配置。</p>`,
+          btn("继续浏览", "closeModal()") +
+            btn("开始体验", "closeModal();startRelease()", true, "arrow"),
+        );
+      }
+      function snapshotDetail(n = 24) {
+        openModal(
+          "完整快照 #0" + n,
+          `<p>示例短标识：${n === 24 ? "b9e42d7" : "74ac901"}。创建后内容不可变；正式实现仍使用后端快照 ID。</p><div class="panel">${skillData
+            .filter((s, i) => n === 23 || state.selected[i])
+            .map(
+              (s, i) =>
+                `<div class="release-row"><div class="grow"><p>${s.name}</p><small>${s.desc}</small></div><code>${s.name === "expense-policy" ? (n === 24 && state.version === "new" ? "a8f21c9" : "61b3e20") : s.sha}</code></div>`,
+            )
+            .join(
+              "",
+            )}</div><p style="margin-top:18px">渠道引用和客户端授权独立于快照内容，回滚不会重新构建。</p>`,
+        );
+      }
+      function confirmAction(type) {
+        if (type === "stable" && !state.verified) {
+          verifyDialog();
+          return;
+        }
+        let title =
+          type === "canary"
+            ? "推进到 Canary"
+            : type === "stable"
+              ? "推进到 Stable"
+              : "回滚 Stable 到 #023";
+        let target = type === "rollback" ? 23 : 24;
+        openModal(
+          title,
+          `<div class="hint ${type === "rollback" ? "amber" : ""}">${icon("layers")}快照 #0${type === "canary" ? state.canary : state.stable} → #0${target}</div><p>${type === "canary" ? "将改变测试 Profile 的交付目标。正式渠道不变。" : type === "stable" ? "将改变正式 Profile 的交付目标。固定在 #023 的客户端保持原版本。" : "回滚只切换渠道指针，dynamic 跟随旧快照；pinned 仍使用固定版本。"}</p><label>操作原因 <span style="color:var(--red)">*</span><textarea id="reason" placeholder="填写验证结论或回滚原因" oninput="document.getElementById('confirmwrite').disabled=!this.value.trim()"></textarea></label><p class="comment" style="margin-top:12px">正式实现提交前检查渠道 generation；冲突时需重新预览。</p>`,
+          btn("取消", "closeModal()") +
+            `<button id="confirmwrite" class="btn ${type === "rollback" ? "danger" : "primary"}" disabled onclick="performAction('${type}')">确认${type === "rollback" ? "回滚" : "推进"}</button>`,
+        );
+      }
+      function performAction(type) {
+        const reason = document.getElementById("reason").value.trim();
+        if (!reason) return;
+        if (type === "canary") {
+          state.canary = 24;
+          state.verified = false;
+        } else if (type === "stable") {
+          state.stable = 24;
+        } else state.stable = 23;
+        state.events.unshift(
+          `${type === "rollback" ? "回滚 Stable 到 #023" : type === "canary" ? "推进 #024 到 Canary" : "推进 #024 到 Stable"} · ${reason}`,
+        );
+        closeModal();
+        render();
+        toast(
+          type === "rollback"
+            ? "Stable 已回滚到 #023（模拟）"
+            : "渠道已更新（模拟），请查看 Agent 接入中的目标快照",
+        );
+      }
+      function verifyDialog() {
+        openModal(
+          "记录 Canary 人工验证",
+          `<p>请在真实使用中检查挂载状态、重新加载 Skill，并执行任务。此处勾选仅代表人工声明，不是平台自动检测。</p><div class="panel panelpad"><strong style="font-size:13px">建议验证用例</strong><p style="margin:10px 0 0">${!state.selected[0] ? "本次快照移除了 expense-policy，请确认测试 Agent 不再获得该 Skill；固定旧版客户端仍保留原内容。" : state.version === "new" ? "有效票据，报销 150 元。新版 200 元额度应允许通过；固定旧版 100 元额度仍应拒绝。" : "本次保留了原来的 100 元额度，150 元报销仍应拒绝。请确认保留的其他 Skills 正常工作。"}</p></div><label class="check"><input id="verified" type="checkbox" onchange="document.getElementById('verifybutton').disabled=!this.checked">我已核对测试 Agent 的结果，愿意继续发布。</label>`,
+          btn("取消", "closeModal()") +
+            `<button id="verifybutton" class="btn primary" disabled onclick="state.verified=true;state.events.unshift('人工确认 Canary 验证结果（原型本地记录）');closeModal();render();toast('已记录，可以继续推进 Stable')">记录验证结果</button>`,
+        );
+      }
+      function skillDetail(name) {
+        const s = skillData.find((s) => s.name === name);
+        openModal(
+          name,
+          `<p>${s.desc} · 来源：${name === "expense-policy" ? "team/finance-skills" : "team/developer-skills"}</p><div class="actions">${badge(name === "expense-policy" ? "有候选更新" : "已发布", name === "expense-policy" ? "amber" : "")}<code>${s.sha}</code></div><div class="filelist"><div class="selected">${icon("file")} SKILL.md</div><div>${icon("file")} references/</div></div><div class="codeview">---\nname: ${name}\ndescription: ${s.desc}\n---\n\n${name === "expense-policy" ? "# Expense policy\nLimit: 200 yuan.\nValid receipts are required." : name === "code-review" ? "# Review checklist\n检查正确性、权限边界与测试覆盖。" : "# SQL safety\n只运行只读查询，先解释范围再查询。"}</div>`,
+          btn("关闭", "closeModal()") +
+            btn("加入发布", "closeModal();startRelease()", true, "arrow"),
+        );
+      }
+      function pipelineDetail() {
+        openModal(
+          "流水线 · a8f21c9",
+          `<p>team/finance-skills · 固定提交校验</p><div class="timeline">${["读取固定提交：a8f21c9", "发现 Skill：expense-policy", state.pipeline === "success" ? "校验：全部通过" : "校验失败：SKILL.md 缺少 description", state.pipeline === "success" ? "制品：已写入不可变存储" : "制品：未生成新版本"].map((s) => `<div class="timelineitem"><p>${s}</p></div>`).join("")}</div>`,
+          btn("关闭", "closeModal()") +
+            btn("校验配置", "closeModal();pipelineSettings()", true),
+        );
+      }
+      function pipelineSettings() {
+        openModal(
+          "校验配置 · finance-skills",
+          `<p>扫描目录属于仓库配置；禁止脚本分发属于组织策略。正式实现分开保存，并提示各自的影响范围。原型仅在内存演示。</p><div class="settingsrow"><label for="root">Skill 根目录<small>相对于仓库根目录</small></label><input id="root" type="text" value="${esc(state.root)}"></div><div class="settingsrow"><label>禁止脚本分发<small>组织级安全策略，对全部仓库生效</small></label><button class="toggle" id="strict" role="switch" aria-label="禁止脚本分发" aria-checked="${state.strict}" onclick="this.setAttribute('aria-checked',this.getAttribute('aria-checked')!=='true')"></button></div><div class="hint" style="margin-top:20px">${icon("shield")}发现 → 静态校验 → 制品。步骤固定，保存配置不影响已发布快照。</div>`,
+          btn("取消", "closeModal()") + btn("保存配置", "saveSettings()", true),
+        );
+      }
+      function saveSettings() {
+        let root = document.getElementById("root").value.trim();
+        if (!root || root.startsWith("/") || root.split("/").includes("..")) {
+          toast("请填写有效的仓库相对路径");
+          return;
+        }
+        state.root = root;
+        state.strict =
+          document.getElementById("strict").getAttribute("aria-checked") ===
+          "true";
+        state.events.unshift("保存仓库校验配置（原型）");
+        closeModal();
+        toast("配置已保存在当前原型，未修改实际流水线");
+      }
+      function agentDetail(name, mode, snap) {
+        openModal(
+          name,
+          `<p>模式：${mode} · 目标快照：#0${snap}</p><div class="hint ${mode === "pinned" ? "amber" : ""}">${icon(mode === "pinned" ? "lock" : "refresh")}${mode === "pinned" ? "固定任务快照，渠道推进不改变当前任务。" : "跟随渠道更新；新打开的文件读取新索引。"}</div><div class="codeview">skills-mount status\n# 核对 snapshotId 与 Profile 授权\n\n${mode === "pinned" ? "# 在任务结束并确认服务端绑定后\nskills-mount refresh --repin" : "# 重新加载 Skills 或开启新任务\nskills-mount refresh"}</div><p style="margin-top:18px">以上是操作指引，原型不执行终端命令。</p>`,
+        );
+      }
+      function agentGuide() {
+        openModal(
+          "连接你的第一个 Agent",
+          `<ol class="guide-list"><li>创建 Profile：选择渠道、授权 Skills、dynamic / pinned 和离线策略。</li><li>注册客户端并保存只显示一次的 Token。</li><li>在 Linux 使用 skills-mount 挂载，然后让 Agent 从挂载目录加载 Skills。</li></ol><div class="codeview">skills-mount mount \\\n  --server https://skiva.example.com \\\n  --profile &lt;PROFILE_ID&gt; \\\n  --token-file ./client.token \\\n  --path ./agent-skills</div><p style="margin-top:16px">本原型不生成真实令牌。可以先运行项目里的 Pydantic AI 示例。</p>`,
+        );
+      }
+      function repoGuide() {
+        openModal(
+          "选择仓库接入方式",
+          `<div class="panel panelpad"><h3>平台托管</h3><p style="margin:8px 0 0">填写命名空间、仓库路径，选择模板。创建完成后通过 Git clone / push 管理内容。</p></div><div class="panel panelpad" style="margin-top:14px"><h3>外部 Git</h3><p style="margin:8px 0 0">填写远程地址、分支、Skill 根目录和凭据引用；测试连接后同步。</p></div><p class="comment" style="margin-top:18px">完整接入表单沿用现有能力，原型优先展示发布主流程。</p>`,
+        );
+      }
+      for (const [id, n] of [
+        ["brandicon", "layers"],
+        ["menubtn", "menu"],
+        ["searchicon", "search"],
+        ["guidebtn", "help"],
+      ])
+        document.getElementById(id).innerHTML = icon(n);
+      document.getElementById("helpnav").innerHTML =
+        icon("help") + "<span>使用指引</span>";
+      document.getElementById("resetnav").innerHTML =
+        icon("refresh") + "<span>重置演示</span>";
+      document.addEventListener("keydown", (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+          e.preventDefault();
+          const field = document.querySelector("input[name=query]");
+          if (getComputedStyle(field.parentElement).display === "none") {
+            go("skills");
+            document.getElementById("skillsearch").focus();
+          } else field.focus();
+        }
+        if (e.key === "Escape") menu(false);
+      });
+      render();
+    </script>
+  </body>
+</html>
