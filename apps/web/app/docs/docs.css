@@ -650,3 +650,21 @@
     transition: none !important;
   }
 }
+
+/* Keep the full wordmark visible when the mobile search field shrinks. */
+.docs-brand {
+  flex-shrink: 0;
+}
+.docs-search {
+  min-width: 0;
+}
+@media (max-width: 760px) {
+  .docs-brand .skiva-logo {
+    width: 92px;
+    height: 28px;
+  }
+  .docs-search {
+    flex: 1;
+    width: auto;
+  }
+}

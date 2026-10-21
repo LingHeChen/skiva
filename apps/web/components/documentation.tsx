@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "./brand";
 
 import {
   useEffect,
@@ -188,10 +189,7 @@ export function Documentation({ slug }: { slug: string }) {
           <Menu size={20} />
         </button>
         <Link href="/docs" className="docs-brand">
-          <span className="docs-brand-mark">
-            <BookOpen size={20} />
-          </span>
-          <strong>SKIVA</strong>
+          <BrandLogo />
           <span className="docs-brand-divider" />
           <span>文档</span>
         </Link>

@@ -3070,3 +3070,21 @@ label > [data-slot="native-select-wrapper"],
     min-width: 0;
   }
 }
+
+/* Shared, font-independent Skiva artwork. */
+.skiva-logo {
+  display: block;
+  flex-shrink: 0;
+  width: 112px;
+  height: 32px;
+  color: var(--ink);
+}
+.skiva-logo-symbol {
+  fill: #7d8f59;
+}
+.skiva-logo-mark {
+  width: 26px;
+}
+.topbar-brand .skiva-logo {
+  color: var(--ink);
+}

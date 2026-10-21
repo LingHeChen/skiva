@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/brand/skiva-dark.svg">
+    <img src="apps/web/public/brand/skiva-light.svg" alt="Skiva" width="360">
+  </picture>
+</p>
+
 # Skiva
 
 Git-backed Skills Delivery Platform。

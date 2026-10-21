@@ -22,6 +22,10 @@ rmSync(stage, { recursive: true, force: true });
 mkdirSync(join(stage, "app"), { recursive: true });
 for (const entry of [
   "content",
+  "public",
+  "app/favicon.ico",
+  "app/icon.svg",
+  "app/apple-icon.png",
   "app/docs",
   "app/globals.css",
   "app/layout.tsx",
@@ -41,6 +45,9 @@ cpSync(
   join(web, "components/documentation.tsx"),
   join(stage, "components/documentation.tsx"),
 );
+for (const entry of ["brand.tsx", "brand-geometry.json"]) {
+  cpSync(join(web, "components", entry), join(stage, "components", entry));
+}
 symlinkSync(join(web, "node_modules"), join(stage, "node_modules"), "dir");
 writeFileSync(
   join(stage, "app/page.tsx"),

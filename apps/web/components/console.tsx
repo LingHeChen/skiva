@@ -1,4 +1,5 @@
 "use client";
+import { BrandLogo } from "./brand";
 import { Skeleton as LoadingSkeleton } from "./ui/skeleton";
 import {
   Sheet,
@@ -206,12 +207,8 @@ function Shell() {
   const sidebar = (
     <aside className={mobile ? "sidebar open" : "sidebar"}>
       <Link href="/dashboard" className="brand">
-        <div className="brand-mark">
-          <Layers size={22} />
-        </div>
-        <span>
-          skiva<span className="brand-light"> / console</span>
-        </span>
+        <BrandLogo />
+        <span className="brand-light">/ console</span>
       </Link>
       <div className="workspace">
         <div className="workspace-icon" aria-hidden="true">
@@ -296,7 +293,7 @@ function Shell() {
             <Menu size={20} />
           </Button>
           <Link href="/repositories" className="topbar-brand">
-            <Layers size={22} /> skiva
+            <BrandLogo />
           </Link>
           <div className="breadcrumbs">
             <span className="organization-crumb" title={me.data.orgName}>
@@ -434,7 +431,7 @@ function Login() {
     <div className="login-page">
       <div className="login-story">
         <div className="brand">
-          <Layers /> skiva / console
+          <BrandLogo /> <span className="brand-light">/ console</span>
         </div>
         <p className="eyebrow">ONE SOURCE. EVERY AGENT.</p>
         <h1>
