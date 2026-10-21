@@ -30,6 +30,7 @@ jobs:
           make DATABASE_URL='postgres://skiva:skiva-dev@localhost:55432/skiva_test?sslmode=disable' migrate-up
           make deps migrate-up lint test build
       - run: make openapi-generate sqlc-generate && git diff --exit-code -- packages/openapi apps/server/internal/db
+      - run: SKIVA_DB_PASSWORD=compose-validation-only docker compose config --quiet
       - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./apps/server/... ./apps/mount/... ./packages/...
       - run: npm audit --prefix apps/web --omit=dev --audit-level=high --registry=https://registry.npmjs.org
       - run: cd apps/web && npx playwright install --with-deps chrome

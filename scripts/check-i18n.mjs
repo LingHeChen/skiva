@@ -77,6 +77,8 @@ const guides = [
   "README.md",
   "LICENSE-FAQ.md",
   "THIRD_PARTY_NOTICES.md",
+  "deployments/COMPOSE.md",
+  "deployments/COMPOSE.zh-CN.md",
   ...files("docs"),
   "deployments/preproduction/README.md",
   "examples/pydantic-agent/README.md",

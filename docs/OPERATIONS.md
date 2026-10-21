@@ -4,6 +4,8 @@ English · [简体中文](OPERATIONS.zh-CN.md)
 
 ## Installation
 
+For a container-only local evaluation, use the root `compose.yaml`: run `./scripts/setup-compose.sh`, then `docker compose up --build -d --wait`. It includes automatic migrations and persistent volumes. See [Compose operations](../deployments/COMPOSE.md). The steps below describe source development and alternative deployment templates.
+
 1. Use Node 24, Git and the Go 1.26.10 toolchain. `make deps` downloads locked dependencies.
 2. Copy `.env.example` to `.env.local`, mode 0600, choose a unique administrator bootstrap password (14+ characters), database URL and Web origin. `SKIVA_ORG_ID` optionally selects the single deployment organization; keep it stable across upgrades.
 3. `make db` starts the local PostgreSQL container. `make migrate-up` applies goose migrations. If using an alternate database, pass `DATABASE_URL=...`; `scripts/dev.sh` loads `.env.local` before calling Make.

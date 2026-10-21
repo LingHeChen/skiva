@@ -45,6 +45,17 @@ Use the console to browse source and version differences, configure validation, 
 
 Git pushes update source and trigger builds; they do not automatically promote Stable. See [Your first release](https://linghechen.github.io/skiva/docs/quickstart/) and [Publishing and rollback](https://linghechen.github.io/skiva/docs/releases/).
 
+## Run with Docker Compose
+
+For a local self-hosted evaluation, use the root Compose stack. It builds images, migrates the database, and persists data automatically.
+
+```bash
+./scripts/setup-compose.sh
+docker compose up --build -d --wait
+```
+
+Open <http://localhost:3000>; use `admin@localhost` and the password generated in `.env`. See [Compose setup and upgrades](deployments/COMPOSE.md). This HTTP stack is local-only; HTTPS/OIDC and hosted Git use the [preproduction template](deployments/preproduction/README.md).
+
 ## Run locally
 
 Install Go with automatic toolchain support, Node.js 24, Docker, Git, and Python 3. The Makefile selects Go 1.26.10. Start Docker before continuing.

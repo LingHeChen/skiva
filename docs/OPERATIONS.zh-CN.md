@@ -4,6 +4,8 @@
 
 ## 安装
 
+仅使用容器进行本地试用时，执行 `./scripts/setup-compose.sh`，再执行 `docker compose up --build -d --wait`。根目录 Compose 包含自动迁移和持久化卷，详见 [Compose 运维说明](../deployments/COMPOSE.zh-CN.md)。以下步骤适用于源码开发及其他部署模板。
+
 1. 准备 Node 24、Git 和 Go 1.26.10 工具链，`make deps` 下载锁定的依赖。
 2. 将 `.env.example` 复制为 `.env.local`，权限设为 0600，配置至少 14 字符的独立初始管理员密码、数据库地址和 Web 来源。`SKIVA_ORG_ID` 可指定单组织部署的组织 ID，升级时保持不变。
 3. `make db` 启动本地 PostgreSQL，`make migrate-up` 执行 goose 迁移。其他数据库使用 `DATABASE_URL=...`；`scripts/dev.sh` 会先加载 `.env.local`。

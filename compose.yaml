@@ -1,0 +1,83 @@
+# Local single-host evaluation. For HTTPS/OIDC use deployments/preproduction/.
+name: skiva-compose
+x-server: &server
+  image: skiva-server:local
+  build:
+    context: .
+    dockerfile: deployments/docker/server.Dockerfile
+  environment: &server-environment
+    SKIVA_ENV: local
+    SKIVA_DATABASE_URL: postgres://skiva:${SKIVA_DB_PASSWORD:?Run ./scripts/setup-compose.sh first}@postgres:5432/skiva?sslmode=disable
+    SKIVA_ADMIN_EMAIL: ${SKIVA_ADMIN_EMAIL:-admin@localhost}
+    SKIVA_ADMIN_PASSWORD: ${SKIVA_ADMIN_PASSWORD:?Run ./scripts/setup-compose.sh first}
+    SKIVA_LISTEN: 0.0.0.0:8080
+    SKIVA_DATA_DIR: /data
+    SKIVA_WEB_ORIGIN: http://localhost:${SKIVA_WEB_PORT:-3000}
+    SKIVA_GIT_ALLOWLIST: ${SKIVA_GIT_ALLOWLIST:-}
+    SKIVA_MANAGED_GIT_ENABLED: 'false'
+    SKIVA_MANAGED_GIT_WRITE_ENABLED: 'false'
+    SKIVA_MANAGED_GIT_AUTO_CI_ENABLED: 'false'
+  volumes: [artifacts:/data]
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  logging:
+    driver: json-file
+    options: {max-size: 10m, max-file: '3'}
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: skiva
+      POSTGRES_USER: skiva
+      POSTGRES_PASSWORD: ${SKIVA_DB_PASSWORD:?Run ./scripts/setup-compose.sh first}
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U skiva -d skiva']
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+  migrate:
+    <<: *server
+    command: [migrate]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: 'no'
+  server:
+    <<: *server
+    depends_on:
+      postgres: {condition: service_healthy}
+      migrate: {condition: service_completed_successfully}
+    ports: ['127.0.0.1:${SKIVA_API_PORT:-8080}:8080']
+    healthcheck:
+      test: [CMD, skiva-server, healthcheck]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    stop_grace_period: 150s
+    restart: unless-stopped
+  web:
+    image: skiva-web:local
+    build:
+      context: .
+      dockerfile: deployments/docker/web.Dockerfile
+      args:
+        SKIVA_API_URL: http://server:8080
+    environment:
+      PORT: '3000'
+    ports: ['127.0.0.1:${SKIVA_WEB_PORT:-3000}:3000']
+    depends_on:
+      server: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/login').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+volumes:
+  postgres:
+  artifacts:

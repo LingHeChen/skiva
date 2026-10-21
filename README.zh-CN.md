@@ -43,6 +43,17 @@ Skiva 帮助团队将 Git 中的 Skills 校验、组合为不可变快照，再�
 
 Git 推送只触发来源更新与构建，不会自动推进 Stable。详细步骤见[第一次发布](https://linghechen.github.io/skiva/docs/zh/quickstart/)和[发布与回滚](https://linghechen.github.io/skiva/docs/zh/releases/)。
 
+## 使用 Docker Compose
+
+本地自部署试用可使用根目录 Compose，自动构建镜像、迁移数据库并持久化数据。
+
+```bash
+./scripts/setup-compose.sh
+docker compose up --build -d --wait
+```
+
+访问 <http://localhost:3000>，邮箱为 admin@localhost，密码在生成的 .env 中。详见[启动与升级说明](deployments/COMPOSE.zh-CN.md)。此 HTTP 模板仅限本地；HTTPS/OIDC 和托管 Git 使用[预生产模板](deployments/preproduction/README.zh-CN.md)。
+
 ## 本地启动
 
 准备 Go（支持工具链自动下载）、Node.js 24、Docker、Git 和 Python 3。Makefile 使用 Go 1.26.10 工具链；启动前确保 Docker 已运行。
