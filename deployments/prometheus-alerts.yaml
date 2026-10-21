@@ -1,0 +1,35 @@
+groups:
+  - name: esdp
+    rules:
+      - alert: ESDPBlobUnavailable
+        expr: increase(content_requests_total{status="503"}[5m]) > 0
+        for: 1m
+        labels: {severity: critical}
+        annotations: {summary: 'Published artifact unavailable or corrupt'}
+      - alert: ESDPWorkerBacklog
+        expr: esdp_job_queue_pending > 100
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: 'Git build queue is growing'}
+      - alert: ESDPClientsStale
+        expr: esdp_clients_stale > 10
+        for: 15m
+        labels: {severity: warning}
+        annotations: {summary: 'Multiple mount clients are stale'}
+      - alert: ESDPAuditFailure
+        expr: increase(audit_write_failures_total[5m]) > 0
+        labels: {severity: critical}
+        annotations: {summary: 'Audited transaction failed'}
+      - alert: ESDPPipelineFailure
+        expr: increase(pipeline_failures_total[15m]) > 0
+        labels: {severity: warning}
+        annotations: {summary: 'Pipeline validation or publication failed'}
+      - alert: ESDPGitSyncFailure
+        expr: esdp_repositories_error > 0
+        for: 15m
+        labels: {severity: warning}
+        annotations: {summary: 'Git source synchronization remains unhealthy'}
+      - alert: ESDPCredentialsExpiring
+        expr: esdp_credentials_expiring > 0
+        labels: {severity: warning}
+        annotations: {summary: 'Mount credentials expire within seven days'}

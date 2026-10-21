@@ -1,0 +1,101 @@
+package platform
+
+import (
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"net/http"
+)
+
+func (s *Server) Router() http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.Recoverer)
+	r.Use(s.middleware)
+	r.Use(rateLimit)
+	r.Use(observe)
+	r.Get("/metrics", s.metrics)
+	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if e := s.DB.Ping(r.Context()); e != nil {
+			fail(w, r, 503, "DATABASE_UNAVAILABLE", "Database unavailable")
+			return
+		}
+		jsonOut(w, 200, map[string]string{"status": "ok"})
+	})
+	r.Get("/api/v1/auth/oidc", s.oidcStart)
+	r.Get("/api/v1/auth/oidc/callback", s.oidcCallback)
+	r.Post("/api/v1/auth/login", s.login)
+	r.Post("/api/v1/auth/logout", s.logout)
+	r.Post("/api/v1/webhooks/{provider}/{repositoryId}", s.webhook)
+	r.Route("/api/v1", func(r chi.Router) {
+		r.Use(s.auth)
+		r.Use(s.idempotency)
+		r.Get("/me", s.me)
+		r.Patch("/me", s.account)
+		r.Post("/auth/refresh", s.refreshSession)
+		r.Get("/dashboard", s.dashboard)
+		r.Get("/notifications", s.notifications)
+		r.Post("/notifications/{id}/read", s.readNotification)
+		r.Get("/repositories", s.repositories)
+		r.Get("/repositories/{id}", s.repository)
+		r.Get("/skills", s.skills)
+		r.Get("/skills/{id}", s.skill)
+		r.Get("/skills/{id}/versions", s.versions)
+		r.Get("/skill-versions/{id}/tree", s.version)
+		r.Get("/skill-versions/{id}/file", s.version)
+		r.Get("/skill-versions/{id}/diff", s.version)
+		r.Get("/pipelines", s.pipelines)
+		r.Get("/pipelines/{id}", s.pipeline)
+		r.Get("/releases", s.releases)
+		r.Get("/releases/{id}", s.release)
+		r.Get("/channels", s.channels)
+		r.Get("/agent-profiles", s.profiles)
+		r.Get("/agent-profiles/{id}", s.profile)
+		r.Get("/mount-clients", s.clients)
+		r.Get("/mount-clients/{id}", s.client)
+		r.Group(func(r chi.Router) {
+			r.Use(s.permit("repo_maintainer"))
+			r.Post("/repositories", s.saveRepository)
+			r.Patch("/repositories/{id}", s.saveRepository)
+			r.Delete("/repositories/{id}", s.deleteRepository)
+			r.Post("/repositories/{id}/test-connection", s.repositoryAction)
+			r.Post("/repositories/{id}/sync", s.repositoryAction)
+			r.Post("/pipelines/{id}/retry", s.retry)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(s.permit("release_manager"))
+			r.Post("/releases/preview", s.createRelease)
+			r.Post("/releases", s.createRelease)
+			r.Post("/channels/{id}/promote", s.promote)
+			r.Post("/channels/{id}/rollback", s.promote)
+		})
+		r.Group(func(r chi.Router) {
+			r.Use(s.permit("agent_manager"))
+			r.Post("/agent-profiles", s.saveProfile)
+			r.Patch("/agent-profiles/{id}", s.saveProfile)
+			r.Post("/mount-clients", s.createClient)
+			r.Post("/mount-clients/{id}/rotate", s.clientAction)
+			r.Post("/mount-clients/{id}/revoke", s.clientAction)
+		})
+		r.Group(func(r chi.Router) { r.Use(s.permit("auditor")); r.Get("/audit-logs", s.audits) })
+		r.Group(func(r chi.Router) {
+			r.Use(s.permit("org_admin"))
+			r.Get("/members", s.members)
+			r.Post("/members", s.createMember)
+			r.Post("/members/{id}/roles", s.memberRoles)
+			r.Patch("/members/{id}", s.updateMember)
+			r.Get("/settings", s.settings)
+			r.Patch("/settings", s.saveSettings)
+			r.Get("/credentials", s.credentials)
+			r.Post("/credentials", s.saveCredential)
+			r.Patch("/credentials/{id}", s.saveCredential)
+		})
+	})
+	r.Route("/distribution/v1", func(r chi.Router) {
+		r.Use(s.clientAuth)
+		r.Get("/profile", s.distributionProfile)
+		r.Get("/manifest", s.manifest)
+		r.Get("/objects/{digest}", s.object)
+		r.Get("/events", s.events)
+		r.Post("/clients/heartbeat", s.heartbeat)
+	})
+	return r
+}

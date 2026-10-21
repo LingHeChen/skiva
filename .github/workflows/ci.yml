@@ -1,0 +1,38 @@
+name: verify
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: esdp, POSTGRES_PASSWORD: esdp-dev, POSTGRES_DB: esdp}
+        ports: ['55432:5432']
+        options: --health-cmd "pg_isready -U esdp" --health-interval 3s --health-retries 20
+    env:
+      GOTOOLCHAIN: go1.26.10
+      ESDP_ADMIN_PASSWORD: local-esdp-development-2026
+      ESDP_WEB_ORIGIN: http://localhost:3001
+      ESDP_TEST_DATABASE_URL: postgres://esdp:esdp-dev@localhost:55432/esdp?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with: {go-version: '1.26.10'}
+      - uses: actions/setup-node@v4
+        with: {node-version: '24', cache: npm, cache-dependency-path: apps/web/package-lock.json}
+      - run: |
+          PGPASSWORD=esdp-dev createdb -h localhost -p 55432 -U esdp esdp_test
+          make DATABASE_URL='postgres://esdp:esdp-dev@localhost:55432/esdp_test?sslmode=disable' migrate-up
+          make deps migrate-up lint test build
+      - run: make openapi-generate sqlc-generate && git diff --exit-code -- packages/openapi apps/server/internal/db
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./apps/server/... ./apps/mount/... ./packages/...
+      - run: npm audit --prefix apps/web --omit=dev --audit-level=high --registry=https://registry.npmjs.org
+      - run: cd apps/web && npx playwright install --with-deps chrome
+      - run: |
+          bin/esdp-server > /tmp/esdp-server.log 2>&1 &
+          npm run dev --prefix apps/web -- --port 3001 > /tmp/esdp-web.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://localhost:3001/login >/dev/null && break || sleep 1; done
+          make test-e2e
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: evidence, path: test-results}

@@ -1,0 +1,21 @@
+node_modules/
+.next/
+.env*
+!.env.example
+.data/
+bin/
+test-results/
+playwright-report/
+
+# Local tooling, browser traces, and generated caches
+.playwright-cli/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.DS_Store
+*.log
+
+# Local credentials and keys
+*.pem
+*.key
+*.token

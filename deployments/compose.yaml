@@ -1,0 +1,53 @@
+name: esdp
+services:
+  postgres:
+    image: postgres:17
+    container_name: esdp-postgres
+    environment:
+      POSTGRES_DB: esdp
+      POSTGRES_USER: esdp
+      POSTGRES_PASSWORD: ${ESDP_DB_PASSWORD:-esdp-dev}
+    ports: ['127.0.0.1:55432:5432']
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U esdp']
+      interval: 3s
+      retries: 20
+  server:
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: deployments/docker/server.Dockerfile
+    environment:
+      ESDP_ENV: ${ESDP_ENV:-local}
+      ESDP_OIDC_ISSUER: ${ESDP_OIDC_ISSUER:-}
+      ESDP_OIDC_CLIENT_ID: ${ESDP_OIDC_CLIENT_ID:-}
+      ESDP_OIDC_CLIENT_SECRET: ${ESDP_OIDC_CLIENT_SECRET:-}
+      ESDP_DATABASE_URL: postgres://esdp:${ESDP_DB_PASSWORD:-esdp-dev}@postgres:5432/esdp?sslmode=disable
+      ESDP_ADMIN_PASSWORD: ${ESDP_ADMIN_PASSWORD:-}
+      ESDP_ADMIN_EMAIL: ${ESDP_ADMIN_EMAIL:-admin@localhost}
+      ESDP_LISTEN: 0.0.0.0:8080
+      ESDP_DATA_DIR: /data
+      ESDP_WEB_ORIGIN: ${ESDP_WEB_ORIGIN:-http://localhost:3000}
+      ESDP_GIT_ALLOWLIST: ${ESDP_GIT_ALLOWLIST:-}
+    ports: ['127.0.0.1:8080:8080']
+    volumes: [artifacts:/data]
+    depends_on:
+      postgres: {condition: service_healthy}
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    restart: unless-stopped
+  web:
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: deployments/docker/web.Dockerfile
+      args:
+        ESDP_API_URL: http://server:8080
+    ports: ['127.0.0.1:3000:3000']
+    depends_on: [server]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+volumes:
+  postgres:
+  artifacts:
