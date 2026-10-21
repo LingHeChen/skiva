@@ -1172,18 +1172,20 @@ function Detail({
         <Button variant="outline" asChild>
           <Link href={"/" + section}>返回列表</Link>
         </Button>
-        {((section === "repositories" && allowed("repo_maintainer")) ||
+        {((section === "repositories" &&
+          (allowed("repo_maintainer") || v.accessRole === "maintainer")) ||
           (section === "profiles" && allowed("agent_manager"))) && (
           <Button onClick={() => setEdit(true)}>编辑配置</Button>
         )}
-        {section === "repositories" && allowed("repo_maintainer") && (
-          <Button
-            disabled={a.busy}
-            onClick={() => a.run("/repositories/" + id + "/sync")}
-          >
-            立即同步
-          </Button>
-        )}
+        {section === "repositories" &&
+          (allowed("repo_maintainer") || v.accessRole === "maintainer") && (
+            <Button
+              disabled={a.busy}
+              onClick={() => a.run("/repositories/" + id + "/sync")}
+            >
+              立即同步
+            </Button>
+          )}
         {section === "pipelines" &&
           v.status === "failed" &&
           allowed("repo_maintainer") && (
@@ -1209,6 +1211,7 @@ function Detail({
                   "telemetry",
                   "syncJobs",
                   "hostingPolicy",
+                  "accessRole",
                   "description",
                 ].includes(k) && val !== null,
             )

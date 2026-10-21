@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import { Button } from "./ui/button";
@@ -39,6 +40,8 @@ function CopyText({ value }: { value: string }) {
   );
 }
 export function ManagedRepository({ id }: { id: string }) {
+  const router = useRouter();
+  const [danger, setDanger] = useState("");
   const root = "/repositories/" + id,
     qc = useQueryClient();
   const [tab, setTab] = useState("events"),
@@ -418,7 +421,13 @@ export function ManagedRepository({ id }: { id: string }) {
               <Button
                 disabled={busy || !userId}
                 onClick={() =>
-                  act(root + "/members", { userId, accessRole: role }, "PUT")
+                  role === "none"
+                    ? setDanger("member")
+                    : act(
+                        root + "/members",
+                        { userId, accessRole: role },
+                        "PUT",
+                      )
                 }
               >
                 保存成员权限
@@ -495,6 +504,37 @@ export function ManagedRepository({ id }: { id: string }) {
           )}
         </div>
       )}
+      {maintainer && (
+        <div className="actions">
+          <Button variant="destructive" onClick={() => setDanger("delete")}>
+            软删除仓库
+          </Button>
+        </div>
+      )}
+      <ConfirmDialog
+        open={!!danger}
+        title={danger === "delete" ? "软删除此托管仓库？" : "移除此仓库成员？"}
+        onClose={() => setDanger("")}
+        busy={busy}
+        onConfirm={async () => {
+          const result =
+            danger === "delete"
+              ? await act(root, {}, "DELETE")
+              : await act(
+                  root + "/members",
+                  { userId, accessRole: "none" },
+                  "PUT",
+                );
+          if (result) {
+            if (danger === "delete") router.push("/repositories");
+            setDanger("");
+          }
+        }}
+      >
+        {danger === "delete"
+          ? "新的 Git 访问将停止。源仓库、历史快照和已发布制品会保留，名称继续保留。"
+          : "该成员的新 Git 请求将按剩余权限重新授权；现有 Token 不再授予已移除的仓库权限。"}
+      </ConfirmDialog>
       <ConfirmDialog
         open={!!revoke}
         title="撤销 Git Token？"
