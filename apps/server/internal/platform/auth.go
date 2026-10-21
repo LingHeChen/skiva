@@ -3,10 +3,10 @@ package platform
 import (
 	"context"
 	"encoding/json"
-	"skiva/packages/protocol"
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"skiva/packages/protocol"
 	"strings"
 	"time"
 )
@@ -147,7 +147,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 }
 func (s *Server) me(w http.ResponseWriter, r *http.Request) {
 	a := who(r)
-	s.one(w, r, `SELECT jsonb_build_object('id',u.id,'email',u.email,'displayName',u.display_name,'orgId',u.org_id,'roles',$2::jsonb) FROM users u WHERE id=$1`, a.ID, mustJSON(a.Roles))
+	s.one(w, r, `SELECT jsonb_build_object('id',u.id,'email',u.email,'displayName',u.display_name,'orgId',u.org_id,'roles',$2::jsonb,'managedGitEnabled',$3::boolean) FROM users u WHERE id=$1`, a.ID, mustJSON(a.Roles), hostingEnabled("ENABLED"))
 }
 func mustJSON(v any) []byte { b, _ := json.Marshal(v); return b }
 func (s *Server) account(w http.ResponseWriter, r *http.Request) {

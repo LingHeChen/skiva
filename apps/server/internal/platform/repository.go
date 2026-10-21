@@ -8,7 +8,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"skiva/packages/protocol"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -20,6 +19,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"skiva/packages/protocol"
 	"strings"
 	"time"
 )
@@ -27,6 +27,10 @@ import (
 var shaPattern = regexp.MustCompile(`^[0-9a-f]{40}([0-9a-f]{24})?$`)
 
 type repoInput struct {
+	SourceType       string  `json:"sourceType"`
+	Namespace        string  `json:"namespace"`
+	Slug             string  `json:"slug"`
+	Template         string  `json:"template"`
 	Name             string  `json:"name"`
 	RemoteURL        string  `json:"remoteUrl"`
 	DefaultRef       string  `json:"defaultRef"`
@@ -111,15 +115,18 @@ func (b *limitedBuffer) Write(p []byte) (int, error) {
 	return b.Buffer.Write(p)
 }
 func (s *Server) repositories(w http.ResponseWriter, r *http.Request) {
-	s.list(w, r, `SELECT jsonb_build_object('id',id,'name',name,'remoteUrl',remote_url,'defaultRef',default_ref,'skillRoot',skill_root,'status',status,'lastCommitSha',last_commit_sha,'lastSyncAt',last_sync_at,'createdAt',created_at) FROM repositories WHERE org_id=$1 AND deleted_at IS NULL ORDER BY created_at DESC`, who(r).Org)
+	s.list(w, r, `SELECT jsonb_build_object('id',id,'name',name,'sourceType',source_type,'namespace',namespace_slug,'slug',slug,'provisionState',provision_state,'provisionError',provision_error,'hostingPolicy',hosting_policy,'lastPushAt',last_push_at,'remoteUrl',remote_url,'defaultRef',default_ref,'skillRoot',skill_root,'status',status,'lastCommitSha',last_commit_sha,'lastSyncAt',last_sync_at,'createdAt',created_at) FROM repositories WHERE org_id=$1 AND deleted_at IS NULL AND (source_type='external' OR EXISTS(SELECT 1 FROM role_bindings WHERE user_id=$2 AND org_id=$1 AND role='org_admin') OR EXISTS(SELECT 1 FROM repository_members WHERE repository_id=repositories.id AND user_id=$2)) ORDER BY created_at DESC`, who(r).Org, who(r).ID)
 }
 func (s *Server) repository(w http.ResponseWriter, r *http.Request) {
-	s.one(w, r, `SELECT jsonb_build_object('id',id,'name',name,'remoteUrl',remote_url,'defaultRef',default_ref,'skillRoot',skill_root,'status',status,'credentialId',credential_id,'webhookSecretRef',webhook_secret_ref,'lastCommitSha',last_commit_sha,'lastSyncAt',last_sync_at,'syncJobs',COALESCE((SELECT jsonb_agg(j) FROM (SELECT id,status,error,attempts,created_at FROM job_queue WHERE payload->>'repositoryId'=repositories.id::text ORDER BY created_at DESC LIMIT 5) j),'[]')) FROM repositories WHERE org_id=$1 AND id=$2 AND deleted_at IS NULL`, who(r).Org, chi.URLParam(r, "id"))
+	if !s.checkRepositoryAccess(w, r, false) {
+		return
+	}
+	s.one(w, r, `SELECT jsonb_build_object('id',id,'name',name,'sourceType',source_type,'namespace',namespace_slug,'slug',slug,'provisionState',provision_state,'provisionError',provision_error,'hostingPolicy',hosting_policy,'lastPushAt',last_push_at,'remoteUrl',remote_url,'defaultRef',default_ref,'skillRoot',skill_root,'status',status,'credentialId',credential_id,'webhookSecretRef',webhook_secret_ref,'lastCommitSha',last_commit_sha,'lastSyncAt',last_sync_at,'syncJobs',COALESCE((SELECT jsonb_agg(j) FROM (SELECT id,status,error,attempts,created_at FROM job_queue WHERE payload->>'repositoryId'=repositories.id::text ORDER BY created_at DESC LIMIT 5) j),'[]')) FROM repositories WHERE org_id=$1 AND id=$2 AND deleted_at IS NULL`, who(r).Org, chi.URLParam(r, "id"))
 }
 func (s *Server) saveRepository(w http.ResponseWriter, r *http.Request) {
 	var in repoInput
 	if existing := chi.URLParam(r, "id"); existing != "" {
-		if e := s.DB.QueryRow(r.Context(), "SELECT name,remote_url,default_ref,skill_root,credential_id,webhook_secret_ref,status FROM repositories WHERE id=$1 AND org_id=$2 AND deleted_at IS NULL", existing, who(r).Org).Scan(&in.Name, &in.RemoteURL, &in.DefaultRef, &in.SkillRoot, &in.CredentialID, &in.WebhookSecretRef, &in.Status); e != nil {
+		if e := s.DB.QueryRow(r.Context(), "SELECT name,COALESCE(remote_url,''),default_ref,skill_root,credential_id,webhook_secret_ref,status,source_type FROM repositories WHERE id=$1 AND org_id=$2 AND deleted_at IS NULL", existing, who(r).Org).Scan(&in.Name, &in.RemoteURL, &in.DefaultRef, &in.SkillRoot, &in.CredentialID, &in.WebhookSecretRef, &in.Status, &in.SourceType); e != nil {
 			s.dbError(w, r, e)
 			return
 		}
@@ -144,6 +151,25 @@ func (s *Server) saveRepository(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, 400, "INVALID_INPUT", "Invalid repository fields")
 		return
 	}
+	if existing := chi.URLParam(r, "id"); existing != "" {
+		var source string
+		if e := s.DB.QueryRow(r.Context(), "SELECT source_type FROM repositories WHERE id=$1 AND org_id=$2", existing, who(r).Org).Scan(&source); e != nil {
+			s.dbError(w, r, e)
+			return
+		}
+		if in.SourceType != source {
+			fail(w, r, 400, "SOURCE_IMMUTABLE", "Repository source cannot be converted")
+			return
+		}
+	}
+	if in.SourceType == "managed" {
+		s.saveManaged(w, r, in)
+		return
+	}
+	if in.SourceType != "" && in.SourceType != "external" {
+		fail(w, r, 400, "INVALID_SOURCE", "Unknown repository source")
+		return
+	}
 	if e := s.validateRemote(r.Context(), in.RemoteURL); e != nil {
 		fail(w, r, 422, "REMOTE_POLICY", e.Error())
 		return
@@ -156,7 +182,7 @@ func (s *Server) saveRepository(w http.ResponseWriter, r *http.Request) {
 	e := s.transaction(r, func(tx pgx.Tx) error {
 		var before json.RawMessage
 		if !create {
-			if e := tx.QueryRow(r.Context(), "SELECT jsonb_build_object('name',name,'remoteUrl',remote_url,'defaultRef',default_ref,'skillRoot',skill_root,'credentialId',credential_id,'webhookSecretRef',webhook_secret_ref,'status',status) FROM repositories WHERE id=$1 AND org_id=$2 AND deleted_at IS NULL FOR UPDATE", id, who(r).Org).Scan(&before); e != nil {
+			if e := tx.QueryRow(r.Context(), "SELECT jsonb_build_object('name',name,'sourceType',source_type,'namespace',namespace_slug,'slug',slug,'provisionState',provision_state,'provisionError',provision_error,'hostingPolicy',hosting_policy,'lastPushAt',last_push_at,'remoteUrl',remote_url,'defaultRef',default_ref,'skillRoot',skill_root,'credentialId',credential_id,'webhookSecretRef',webhook_secret_ref,'status',status) FROM repositories WHERE id=$1 AND org_id=$2 AND deleted_at IS NULL FOR UPDATE", id, who(r).Org).Scan(&before); e != nil {
 				return e
 			}
 		}
@@ -194,10 +220,21 @@ func (s *Server) saveRepository(w http.ResponseWriter, r *http.Request) {
 func (s *Server) repositoryAction(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	var remote, ref, status string
-	e := s.DB.QueryRow(r.Context(), "SELECT remote_url,default_ref,status FROM repositories WHERE id=$1 AND org_id=$2 AND deleted_at IS NULL", id, who(r).Org).Scan(&remote, &ref, &status)
+	e := s.DB.QueryRow(r.Context(), "SELECT COALESCE(remote_url,''),default_ref,status FROM repositories WHERE id=$1 AND org_id=$2 AND deleted_at IS NULL", id, who(r).Org).Scan(&remote, &ref, &status)
 	if e != nil {
 		s.dbError(w, r, e)
 		return
+	}
+	if remote == "" {
+		role, err := s.repoAccess(r.Context(), who(r), id, true)
+		if err != nil || role != "maintainer" {
+			fail(w, r, 403, "FORBIDDEN", "Repository maintainer required")
+			return
+		}
+		if strings.HasSuffix(r.URL.Path, "test-connection") {
+			s.hostingInfo(w, r)
+			return
+		}
 	}
 	if strings.HasSuffix(r.URL.Path, "test-connection") {
 		if e = s.validateRemote(r.Context(), remote); e == nil {
@@ -234,6 +271,9 @@ func (s *Server) repositoryAction(w http.ResponseWriter, r *http.Request) {
 	jsonOut(w, 202, map[string]string{"runId": job, "jobId": job})
 }
 func (s *Server) deleteRepository(w http.ResponseWriter, r *http.Request) {
+	if !s.checkRepositoryAccess(w, r, true) {
+		return
+	}
 	id := chi.URLParam(r, "id")
 	e := s.transaction(r, func(tx pgx.Tx) error {
 		t, e := tx.Exec(r.Context(), "UPDATE repositories SET deleted_at=now(),status='disabled' WHERE id=$1 AND org_id=$2", id, who(r).Org)
@@ -254,7 +294,7 @@ func (s *Server) deleteRepository(w http.ResponseWriter, r *http.Request) {
 func (s *Server) webhook(w http.ResponseWriter, r *http.Request) {
 	id, p := chi.URLParam(r, "repositoryId"), chi.URLParam(r, "provider")
 	var secretRef, ref string
-	e := s.DB.QueryRow(r.Context(), "SELECT COALESCE(webhook_secret_ref,''),default_ref FROM repositories WHERE id=$1 AND status='active' AND deleted_at IS NULL", id).Scan(&secretRef, &ref)
+	e := s.DB.QueryRow(r.Context(), "SELECT COALESCE(webhook_secret_ref,''),default_ref FROM repositories WHERE id=$1 AND source_type='external' AND status='active' AND deleted_at IS NULL", id).Scan(&secretRef, &ref)
 	if e != nil {
 		fail(w, r, 404, "NOT_FOUND", "Repository unavailable")
 		return

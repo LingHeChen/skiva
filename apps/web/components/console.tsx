@@ -42,6 +42,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "./ui/button";
+import { ManagedRepository } from "./managed-repository";
 import { ConfirmDialog } from "./ui/dialog";
 import { api, apiList, ApiError } from "@/lib/api";
 import { createClient } from "../../../packages/openapi/client";
@@ -705,6 +706,14 @@ function Dashboard() {
   );
 }
 const columnLabels: Record<string, string> = {
+  sourceType: "仓库来源",
+  namespace: "团队命名空间",
+  slug: "仓库路径",
+  provisionState: "准备状态",
+  provisionError: "准备错误",
+  lastPushAt: "最近推送",
+  skillRoot: "扫描目录",
+  defaultRef: "默认 Ref",
   name: "名称",
   repositoryName: "来源仓库",
   remoteUrl: "远程地址",
@@ -1199,6 +1208,7 @@ function Detail({
                   "skills",
                   "telemetry",
                   "syncJobs",
+                  "hostingPolicy",
                   "description",
                 ].includes(k) && val !== null,
             )
@@ -1225,7 +1235,10 @@ function Detail({
             ))}
         </div>
       </div>
-      {section === "repositories" && (
+      {section === "repositories" && v.sourceType === "managed" && (
+        <ManagedRepository id={id} />
+      )}
+      {section === "repositories" && v.sourceType !== "managed" && (
         <div className="panel detail-panel">
           <h2>Webhook 与同步</h2>
           {v.syncJobs?.map((job: any) => (
@@ -1611,19 +1624,25 @@ function FormBox({
   );
 }
 function RepositoryForm({ initial }: { initial?: any }) {
+  const feature = useData("/me");
   const a = useAction();
   const router = useRouter();
   const [v, setV] = useState(
     initial || {
+      sourceType: feature.data?.managedGitEnabled ? "managed" : "external",
+      namespace: "engineering",
+      slug: "",
+      template: "single",
       name: "",
       remoteUrl: "",
       defaultRef: "refs/heads/main",
-      skillRoot: "skills",
+      skillRoot: "",
       status: "active",
       credentialId: "",
       webhookSecretRef: "",
     },
   );
+  const managed = v.sourceType === "managed";
   const fields = [
     ["name", "仓库名称", "例如 engineering-skills"],
     ["remoteUrl", "Git URL", "https://git.example.com/team/skills.git"],
@@ -1635,11 +1654,15 @@ function RepositoryForm({ initial }: { initial?: any }) {
       "Webhook Secret 环境变量（可选）",
       "SKIVA_WEBHOOK_SECRET",
     ],
-  ];
+  ].filter(
+    ([key]) =>
+      !managed ||
+      !["remoteUrl", "credentialId", "webhookSecretRef"].includes(key),
+  );
   return (
     <FormBox
       title={initial ? "编辑仓库" : "接入 Git 仓库"}
-      description="平台只读取 Git Tree，不执行仓库中的脚本、Hooks 或自定义 CI。"
+      description="选择平台托管或外部 Git 来源。平台静态校验 Skills，不执行仓库内容。"
       feedback={a.feedback}
       busy={a.busy}
       dirty
@@ -1653,6 +1676,12 @@ function RepositoryForm({ initial }: { initial?: any }) {
           ]),
         );
         body.status = v.status;
+        body.sourceType = v.sourceType || "external";
+        if (managed) {
+          body.namespace = v.namespace;
+          body.slug = v.slug;
+          body.template = v.template || "empty";
+        }
         const res = await a.run(
           "/repositories" + (initial ? "/" + initial.id : ""),
           body,
@@ -1661,6 +1690,69 @@ function RepositoryForm({ initial }: { initial?: any }) {
         if (res) router.push("/repositories/" + res.id);
       }}
     >
+      {!initial && (
+        <label>
+          仓库来源
+          <select
+            aria-label="仓库来源"
+            value={v.sourceType}
+            onChange={(e) => setV({ ...v, sourceType: e.target.value })}
+          >
+            <option value="managed" disabled={!feature.data?.managedGitEnabled}>
+              平台托管 · 直接 Clone / Push
+              {!feature.data?.managedGitEnabled ? "（尚未启用）" : ""}
+            </option>
+            <option value="external">外部关联 · GitHub / GitLab / Gitea</option>
+          </select>
+        </label>
+      )}
+      {managed && !initial && (
+        <>
+          <label>
+            团队命名空间
+            <input
+              required
+              pattern="[a-z0-9][a-z0-9-]{0,62}"
+              value={v.namespace}
+              onChange={(e) => setV({ ...v, namespace: e.target.value })}
+            />
+          </label>
+          <label>
+            仓库路径
+            <input
+              required
+              pattern="[a-z0-9][a-z0-9-]{0,62}"
+              placeholder="sql-query"
+              value={v.slug}
+              onChange={(e) => setV({ ...v, slug: e.target.value })}
+            />
+          </label>
+          <label>
+            初始模板
+            <select
+              aria-label="初始模板"
+              value={v.template}
+              onChange={(e) =>
+                setV({
+                  ...v,
+                  template: e.target.value,
+                  skillRoot: e.target.value === "monorepo" ? "skills" : "",
+                })
+              }
+            >
+              <option value="single">单 Skill</option>
+              <option value="monorepo">Monorepo</option>
+              <option value="empty">空仓库</option>
+            </select>
+          </label>
+          <p className="info-note">
+            Clone 路径：/git/{v.namespace}/{v.slug || "仓库路径"}.git
+            <br />
+            main 默认禁止强推和删除。创建后配置 Git Token 即可推送；Push
+            不会自动发布 Stable。
+          </p>
+        </>
+      )}
       {fields.map(([k, label, placeholder]) => (
         <label key={k}>
           {label}
@@ -1682,10 +1774,12 @@ function RepositoryForm({ initial }: { initial?: any }) {
           <option value="disabled">停用</option>
         </select>
       </label>
-      <p className="info-note">
-        私网 Git 需在服务端 SKIVA_GIT_ALLOWLIST 中明确配置主机名。Secret
-        只引用服务端环境变量。
-      </p>
+      {!managed && (
+        <p className="info-note">
+          私网 Git 需在服务端 SKIVA_GIT_ALLOWLIST 中明确配置主机名。Secret
+          只引用服务端环境变量。
+        </p>
+      )}
     </FormBox>
   );
 }

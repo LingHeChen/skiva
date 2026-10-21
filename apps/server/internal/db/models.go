@@ -61,6 +61,26 @@ type ChannelHistory struct {
 	CreatedAt        pgtype.Timestamptz
 }
 
+type GitAccessToken struct {
+	ID           pgtype.UUID
+	OrgID        pgtype.UUID
+	OwnerUserID  pgtype.UUID
+	RepositoryID pgtype.UUID
+	Name         string
+	TokenHash    string
+	TokenPrefix  string
+	Scopes       []string
+	ExpiresAt    pgtype.Timestamptz
+	RevokedAt    pgtype.Timestamptz
+	CreatedAt    pgtype.Timestamptz
+	LastUsedAt   pgtype.Timestamptz
+}
+
+type GitNamespace struct {
+	Slug  string
+	OrgID pgtype.UUID
+}
+
 type IdempotencyKey struct {
 	OrgID       pgtype.UUID
 	ActorID     string
@@ -172,7 +192,7 @@ type Repository struct {
 	ID               pgtype.UUID
 	OrgID            pgtype.UUID
 	Name             string
-	RemoteUrl        string
+	RemoteUrl        pgtype.Text
 	CredentialID     pgtype.UUID
 	DefaultRef       string
 	SkillRoot        string
@@ -182,6 +202,15 @@ type Repository struct {
 	CreatedAt        pgtype.Timestamptz
 	DeletedAt        pgtype.Timestamptz
 	WebhookSecretRef pgtype.Text
+	SourceType       string
+	NamespaceSlug    pgtype.Text
+	Slug             pgtype.Text
+	StorageID        pgtype.UUID
+	ProvisionState   pgtype.Text
+	ProvisionError   pgtype.Text
+	Template         string
+	HostingPolicy    []byte
+	LastPushAt       pgtype.Timestamptz
 }
 
 type RepositoryCredential struct {
@@ -190,6 +219,33 @@ type RepositoryCredential struct {
 	Name      string
 	SecretRef string
 	CreatedAt pgtype.Timestamptz
+}
+
+type RepositoryMember struct {
+	OrgID        pgtype.UUID
+	RepositoryID pgtype.UUID
+	UserID       pgtype.UUID
+	AccessRole   string
+}
+
+type RepositoryObservedRef struct {
+	RepositoryID pgtype.UUID
+	Refname      string
+	Oid          string
+}
+
+type RepositoryRefEvent struct {
+	ID           pgtype.UUID
+	RepositoryID pgtype.UUID
+	Refname      string
+	OldOid       string
+	NewOid       string
+	Source       string
+	ObservedAt   pgtype.Timestamptz
+	ProcessedAt  pgtype.Timestamptz
+	AttemptCount int32
+	ErrorText    pgtype.Text
+	JobID        pgtype.UUID
 }
 
 type RoleBinding struct {

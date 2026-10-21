@@ -2,16 +2,19 @@ package main
 
 import (
 	"context"
-	"skiva/apps/server/internal/platform"
 	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
+	"skiva/apps/server/internal/platform"
 	"syscall"
 	"time"
 )
 
 func main() {
+	if len(os.Args) == 3 && os.Args[1] == "git-hook" {
+		os.Exit(platform.GitHookMain(os.Args[2]))
+	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	shutdown, e := platform.InitTelemetry(ctx)

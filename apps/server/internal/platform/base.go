@@ -7,7 +7,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"skiva/packages/protocol"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -17,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"skiva/packages/protocol"
 	"strconv"
 	"strings"
 	"time"
@@ -52,6 +52,9 @@ func env(k, d string) string {
 	return d
 }
 func New(ctx context.Context) (*Server, error) {
+	if hostingEnabled("ENABLED") && os.Getenv("SKIVA_ENV") == "production" && !validGitPublicURL(os.Getenv("SKIVA_GIT_PUBLIC_URL")) {
+		return nil, errors.New("SKIVA_GIT_PUBLIC_URL must be an HTTPS origin for managed hosting")
+	}
 	db, e := pgxpool.New(ctx, env("SKIVA_DATABASE_URL", "postgres://skiva:skiva-dev@localhost:55432/skiva?sslmode=disable"))
 	if e != nil {
 		return nil, e

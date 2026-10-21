@@ -9,8 +9,8 @@ schemas={
 'Error':obj({'error':obj({'code':str_,'message':str_,'requestId':str_,'details':S('object',additionalProperties=True)},['code','message','requestId'])},['error']),
 'File':obj({'path':str_,'type':{'const':'file'},'size':S('integer',minimum=0),'digest':S('string',pattern='^sha256:[a-f0-9]{64}$'),'mode':{'type':'integer','enum':[292,365]}},['path','type','size','digest','mode']),
 'Manifest':obj({'schemaVersion':{'const':1},'snapshotId':uid,'manifestDigest':str_,'generation':S('integer'),'profileId':uid,'files':arr(ref('File'))},['schemaVersion','snapshotId','manifestDigest','generation','profileId','files']),
-'RepositoryInput':obj({'name':str_,'remoteUrl':str_,'defaultRef':str_,'skillRoot':str_,'credentialId':{'type':['string','null']},'webhookSecretRef':{'type':['string','null']},'status':{'enum':['active','disabled']}},['name','remoteUrl']),
-'Repository':obj({'id':uid,'name':str_,'remoteUrl':str_,'defaultRef':str_,'skillRoot':str_,'status':str_,'lastCommitSha':{'type':['string','null']},'lastSyncAt':{'type':['string','null']}},['id','name','remoteUrl','status']),
+'RepositoryInput':obj({'name':str_,'remoteUrl':str_,'defaultRef':str_,'skillRoot':str_,'credentialId':{'type':['string','null']},'webhookSecretRef':{'type':['string','null']},'status':{'enum':['active','disabled']}},['name']),
+'Repository':obj({'id':uid,'name':str_,'remoteUrl':{'type':['string','null']},'defaultRef':str_,'skillRoot':str_,'status':str_,'lastCommitSha':{'type':['string','null']},'lastSyncAt':{'type':['string','null']}},['id','name','remoteUrl','status']),
 'ReleaseInput':obj({'versionIds':arr(uid),'acknowledgeWarnings':S('boolean')},['versionIds']),
 'PromoteInput':obj({'snapshotId':uid,'expectedGeneration':S('integer'),'reason':str_},['snapshotId','expectedGeneration','reason']),
 'ProfileInput':obj({'name':str_,'channelId':uid,'consistencyMode':{'enum':['dynamic','pinned']},'offlinePolicy':{'enum':['allow_cached','deny_on_disconnect']},'pinnedSnapshotId':{'type':['string','null']},'skills':arr(str_),'enabled':S('boolean')},['name','channelId','consistencyMode','offlinePolicy','skills','enabled']),
@@ -47,12 +47,21 @@ schemas.update({
  'Promoted':obj({'channel':str_,'snapshotId':uid,'generation':S('integer'),'publishedAt':str_},['channel','snapshotId','generation','publishedAt']),
  'DistributionProfile':obj({'id':uid,'name':str_,'channelId':uid,'consistencyMode':str_,'policy':obj({'offline':str_,'leaseSeconds':S('integer')}),'activeSnapshot':nullable,'pinnedSnapshotId':nullable,'generation':S('integer')},['id','name','channelId','consistencyMode','policy','generation'])
 })
-list_models={'repositories':'Repository','skills':'Skill','versions':'SkillVersion','pipelines':'Pipeline','releases':'Release','channels':'Channel','profiles':'Profile','clients':'MountClient','audits':'Audit','members':'Member','credentials':'Credential','notifications':'Notification'}
+schemas['RepositoryInput']['properties'].update({'sourceType':{'enum':['external','managed']},'namespace':str_,'slug':str_,'template':{'enum':['empty','single','monorepo']}})
+schemas['Repository']['properties'].update({'sourceType':{'enum':['external','managed']},'namespace':nullable,'slug':nullable,'provisionState':nullable,'provisionError':nullable,'lastPushAt':nullable,'hostingPolicy':ref('HostingPolicy')})
+schemas['HostingPolicy']=obj({'protectedBranches':arr(str_),'triggerRefs':arr(str_),'denyForcePush':S('boolean'),'protectTags':S('boolean'),'maxPushBytes':S('integer'),'maxRepoBytes':S('integer'),'maxFileBytes':S('integer'),'maxFiles':S('integer')})
+schemas['GitTokenInput']=obj({'name':str_,'repositoryId':uid,'scopes':arr({'enum':['repo:read','repo:write']}),'expiresAt':S('string',format='date-time')},['name','repositoryId','scopes','expiresAt'])
+schemas['GitToken']=obj({'id':uid,'name':str_,'repositoryId':uid,'tokenPrefix':str_,'scopes':arr(str_),'expiresAt':str_,'revokedAt':nullable,'lastUsedAt':nullable},['id','name','repositoryId','tokenPrefix','scopes','expiresAt'])
+schemas['GitTokenPage']=obj({'items':arr(ref('GitToken')),'nextCursor':nullable},['items','nextCursor'])
+schemas['GitInfo']=obj({'cloneUrl':str_,'defaultRef':str_,'provisionState':str_,'hostingPolicy':ref('HostingPolicy'),'accessRole':str_,'enabled':S('boolean'),'writeEnabled':S('boolean'),'autoCiEnabled':S('boolean')})
+schemas['RepositoryMemberInput']=obj({'userId':uid,'accessRole':{'enum':['viewer','contributor','maintainer','none']}},['userId','accessRole'])
+list_models={'repositories' :'Repository','skills':'Skill','versions':'SkillVersion','pipelines':'Pipeline','releases':'Release','channels':'Channel','profiles':'Profile','clients':'MountClient','audits':'Audit','members':'Member','credentials':'Credential','notifications':'Notification'}
 for model in list_models.values():schemas[model+'Page']=obj({'items':arr(ref(model)),'nextCursor':nullable},['items','nextCursor'])
 
 source=(root/'apps/server/internal/platform/router.go').read_text()
+source=re.sub(r's.repositoryManage\((s.\w+)\)',r'\1',source)
 paths={}
-for method,path,handler in re.findall(r'r\.(Get|Post|Patch|Delete)\("([^"]+)",\s*(s\.\w+)',source):
+for method,path,handler in re.findall(r'r\.(Get|Post|Patch|Delete|Put)\("([^"]+)",\s*(s\.\w+)',source):
  if path!='/metrics' and not path.startswith(('/api','/distribution')):
   prefix='/distribution/v1' if handler in ['s.distributionProfile','s.manifest','s.object','s.events','s.heartbeat'] else '/api/v1'
   path=prefix+path
@@ -63,6 +72,12 @@ for method,path,handler in re.findall(r'r\.(Get|Post|Patch|Delete)\("([^"]+)",\s
  if handler=='s.manifest':response=ref('Manifest');parameters += [{'name':k,'in':'query','schema':str_} for k in ['profileId','snapshotId']]
  models={'s.repository':'Repository','s.skill':'Skill','s.pipeline':'Pipeline','s.release':'Release','s.profile':'Profile','s.client':'MountClient','s.me':'Me','s.account':'Me','s.settings':'Settings','s.saveSettings':'Settings','s.distributionProfile':'DistributionProfile','s.promote':'Promoted','s.saveRepository':'Created','s.saveProfile':'Created','s.saveCredential':'Created','s.createMember':'Created','s.createClient':'CredentialIssued'}
  if handler in models:response=ref(models[handler])
+ if handler=='s.hostingInfo':response=ref('GitInfo')
+ if handler=='s.hostingPolicy':response=ref('HostingPolicy')
+ if handler=='s.gitTokens':
+  if method=='get':response=ref('GitTokenPage')
+  elif not path.endswith('/revoke'):response=ref('CredentialIssued');code='201'
+ if handler=='s.hostingBrowse':parameters += [{'name':k,'in':'query','schema':str_} for k in ['commit','ref','from','offset','limit']]
  if handler=='s.createRelease':response=ref('ReleasePreview' if path.endswith('/preview') else 'Release')
  if handler in ['s.login','s.refreshSession']:response=obj({'authenticated':S('boolean'),'expiresIn':S('integer')},['authenticated','expiresIn'])
  if handler=='s.oidcStart' or handler=='s.oidcCallback':code='302'
@@ -85,6 +100,10 @@ for method,path,handler in re.findall(r'r\.(Get|Post|Patch|Delete)\("([^"]+)",\s
  if handler=='s.updateMember':schema=obj({'active':S('boolean')},['active'])
  if handler=='s.account':schema=obj({'displayName':str_},['displayName'])
  if handler=='s.memberRoles':schema=obj({'roles':arr(str_)},['roles'])
+ if handler=='s.gitTokens' and method=='post' and not path.endswith('/revoke'):schema=ref('GitTokenInput')
+ if handler=='s.hostingPolicy':schema=ref('HostingPolicy')
+ if handler=='s.hostingMembers' and method=='put':schema=ref('RepositoryMemberInput')
+ if handler=='s.saveRepository' and method=='post':op['responses']['202']={'description':'Managed repository provisioning accepted','content':{'application/json':{'schema':ref('Created')}}}
  if schema:op['requestBody']={'required':True,'content':{'application/json':{'schema':schema}}}
  if handler=='s.promote':parameters.append({'name':'Idempotency-Key','in':'header','required':True,'schema':str_})
  if handler in ['s.login','s.logout','s.webhook','s.oidcStart','s.oidcCallback']:op['security']=[]

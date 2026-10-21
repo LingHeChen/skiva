@@ -86,3 +86,11 @@ skills-mount unmount --path ~/agent-skills
 - API：[OpenAPI 3.1](packages/openapi/openapi.yaml)
 - 测试：[验收报告](docs/ACCEPTANCE.md)
 - 交付源文件：[文件清单](docs/DELIVERY_FILES.md)
+
+## Native managed Git hosting
+
+Skiva can host private Skills repositories alongside existing external Git sources. After migration, enable `SKIVA_MANAGED_GIT_ENABLED`, `SKIVA_MANAGED_GIT_WRITE_ENABLED`, and `SKIVA_MANAGED_GIT_AUTO_CI_ENABLED` gradually. All default to `false`. Configure `SKIVA_GIT_PUBLIC_URL` and route `/git/` directly to the Go service behind TLS.
+
+Create a managed repository in the console, issue a repository-scoped Git PAT, then use standard HTTPS clone/fetch/push. Accepted refs enter the existing fixed-commit pipeline; Git push never promotes Stable automatically. Published artifacts and existing delivery clients remain compatible.
+
+See [managed Git guide](docs/hosting/managed-git.md), [pre-change audit](docs/hosting/CurrentStateAudit.md), and [acceptance record](docs/hosting/ACCEPTANCE.md). Bare repositories and durable event spool reside in the existing data volume and must be restored together with PostgreSQL and CAS.

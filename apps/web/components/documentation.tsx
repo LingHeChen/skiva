@@ -73,6 +73,7 @@ export function Documentation({ slug }: { slug: string }) {
   const doc = docs[pageIndex];
   const [query, setQuery] = useState("");
   const [mobile, setMobile] = useState(false);
+  const [ready, setReady] = useState(false);
   const [dark, setDark] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLButtonElement>(null);
@@ -89,6 +90,7 @@ export function Documentation({ slug }: { slug: string }) {
       )
     : [];
   useEffect(() => {
+    setReady(true);
     const saved = localStorage.getItem("skiva-theme");
     const isDark =
       saved && saved !== "system"
@@ -179,6 +181,7 @@ export function Documentation({ slug }: { slug: string }) {
           type="button"
           className="docs-menu"
           aria-label="打开文档导航"
+          disabled={!ready}
           aria-expanded={mobile}
           onClick={() => setMobile(true)}
         >

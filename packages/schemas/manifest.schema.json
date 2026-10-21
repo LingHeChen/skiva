@@ -168,11 +168,29 @@
               "active",
               "disabled"
             ]
+          },
+          "sourceType": {
+            "enum": [
+              "external",
+              "managed"
+            ]
+          },
+          "namespace": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "template": {
+            "enum": [
+              "empty",
+              "single",
+              "monorepo"
+            ]
           }
         },
         "required": [
-          "name",
-          "remoteUrl"
+          "name"
         ]
       },
       "Repository": {
@@ -186,7 +204,10 @@
             "type": "string"
           },
           "remoteUrl": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "defaultRef": {
             "type": "string"
@@ -208,6 +229,45 @@
               "string",
               "null"
             ]
+          },
+          "sourceType": {
+            "enum": [
+              "external",
+              "managed"
+            ]
+          },
+          "namespace": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "slug": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provisionState": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "provisionError": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastPushAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hostingPolicy": {
+            "$ref": "#/components/schemas/HostingPolicy"
           }
         },
         "required": [
@@ -1231,6 +1291,191 @@
           "consistencyMode",
           "policy",
           "generation"
+        ]
+      },
+      "HostingPolicy": {
+        "type": "object",
+        "properties": {
+          "protectedBranches": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "triggerRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "denyForcePush": {
+            "type": "boolean"
+          },
+          "protectTags": {
+            "type": "boolean"
+          },
+          "maxPushBytes": {
+            "type": "integer"
+          },
+          "maxRepoBytes": {
+            "type": "integer"
+          },
+          "maxFileBytes": {
+            "type": "integer"
+          },
+          "maxFiles": {
+            "type": "integer"
+          }
+        }
+      },
+      "GitTokenInput": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "repositoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "repo:read",
+                "repo:write"
+              ]
+            }
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "name",
+          "repositoryId",
+          "scopes",
+          "expiresAt"
+        ]
+      },
+      "GitToken": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "repositoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tokenPrefix": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastUsedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "repositoryId",
+          "tokenPrefix",
+          "scopes",
+          "expiresAt"
+        ]
+      },
+      "GitTokenPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GitToken"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "GitInfo": {
+        "type": "object",
+        "properties": {
+          "cloneUrl": {
+            "type": "string"
+          },
+          "defaultRef": {
+            "type": "string"
+          },
+          "provisionState": {
+            "type": "string"
+          },
+          "hostingPolicy": {
+            "$ref": "#/components/schemas/HostingPolicy"
+          },
+          "accessRole": {
+            "type": "string"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "writeEnabled": {
+            "type": "boolean"
+          },
+          "autoCiEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RepositoryMemberInput": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accessRole": {
+            "enum": [
+              "viewer",
+              "contributor",
+              "maintainer",
+              "none"
+            ]
+          }
+        },
+        "required": [
+          "userId",
+          "accessRole"
         ]
       },
       "RepositoryPage": {

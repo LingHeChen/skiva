@@ -1426,3 +1426,15 @@ footer > span:last-child {
   font-size: 11px;
   padding: 6px;
 }
+
+.hosting-panel { min-width: 0; }
+.hosting-tabs { display:flex; flex-wrap:wrap; gap:8px; margin:24px 0 12px; }
+.hosting-copy { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:12px 0; }
+.hosting-copy code { overflow-wrap:anywhere; min-width:0; }
+.hosting-fields { display:grid; gap:16px; max-width:800px; }
+.hosting-fields label { display:grid; gap:7px; }
+.hosting-fields input:not([type=checkbox]), .hosting-fields select { width:100%; min-width:0; }
+.hosting-fields input[type=checkbox] { width:auto; justify-self:start; }
+.hosting-diff { max-height:600px; overflow:auto; padding:20px; background:var(--bg); border:1px solid var(--border); border-radius:12px; font-size:12px; }
+.hosting-panel .history-row { flex-wrap:wrap; overflow-wrap:anywhere; }
+@media(max-width:640px) { .hosting-tabs button { font-size:12px; } .hosting-copy code { max-width:100%; } }

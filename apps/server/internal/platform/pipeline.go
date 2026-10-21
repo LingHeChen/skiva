@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"skiva/apps/server/internal/db"
-	"skiva/packages/protocol"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"go.opentelemetry.io/otel"
@@ -17,6 +15,8 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"skiva/apps/server/internal/db"
+	"skiva/packages/protocol"
 	"strconv"
 	"strings"
 	"time"
@@ -50,12 +50,13 @@ func (s *Server) Worker(ctx context.Context) {
 		case <-reconcile.C:
 			s.reconcile(ctx)
 		case <-tick.C:
+			s.hostingTick(ctx)
 			s.job(ctx)
 		}
 	}
 }
 func (s *Server) reconcile(ctx context.Context) {
-	_, _ = s.DB.Exec(ctx, `INSERT INTO job_queue(id,kind,payload) SELECT gen_random_uuid(),'sync',jsonb_build_object('repositoryId',r.id) FROM repositories r WHERE status IN ('active','error') AND deleted_at IS NULL AND NOT EXISTS(SELECT 1 FROM job_queue j WHERE j.payload->>'repositoryId'=r.id::text AND j.status IN ('queued','running'))`)
+	_, _ = s.DB.Exec(ctx, `INSERT INTO job_queue(id,kind,payload) SELECT gen_random_uuid(),'sync',jsonb_build_object('repositoryId',r.id) FROM repositories r WHERE source_type='external' AND status IN ('active','error') AND deleted_at IS NULL AND NOT EXISTS(SELECT 1 FROM job_queue j WHERE j.payload->>'repositoryId'=r.id::text AND j.status IN ('queued','running'))`)
 }
 func (s *Server) job(ctx context.Context) {
 	claimed, e := db.New(s.DB).ClaimJob(ctx)
@@ -71,6 +72,9 @@ func (s *Server) job(ctx context.Context) {
 		span.SetAttributes(attribute.String("job.id", fmt.Sprint(id)), attribute.String("repository.id", p["repositoryId"]), attribute.String("request.id", p["requestId"]))
 		defer span.End()
 		c, cancel := context.WithTimeout(parent, 4*time.Minute)
+		if p["ref"] != "" {
+			c = context.WithValue(c, ctxKey("buildRef"), p["ref"])
+		}
 		e = s.build(c, p["repositoryId"], p["commitSha"])
 		cancel()
 	}
@@ -83,13 +87,20 @@ func (s *Server) job(ctx context.Context) {
 }
 func (s *Server) build(ctx context.Context, repo, commit string) error {
 	buildStarted := time.Now()
-	var remote, ref, root, org string
-	e := s.DB.QueryRow(ctx, "SELECT remote_url,default_ref,skill_root,org_id FROM repositories WHERE id=$1 AND status!='disabled' AND deleted_at IS NULL", repo).Scan(&remote, &ref, &root, &org)
+	var remote, ref, root, org, source, storage string
+	e := s.DB.QueryRow(ctx, "SELECT COALESCE(remote_url,''),default_ref,skill_root,org_id,source_type,COALESCE(storage_id::text,'') FROM repositories WHERE id=$1 AND status!='disabled' AND deleted_at IS NULL", repo).Scan(&remote, &ref, &root, &org, &source, &storage)
 	if e != nil {
 		return e
 	}
-	if e = s.validateRemote(ctx, remote); e != nil {
-		return e
+	if source == "managed" {
+		if selected, ok := ctx.Value(ctxKey("buildRef")).(string); ok && selected != "" {
+			ref = selected
+		}
+	}
+	if source == "external" {
+		if e = s.validateRemote(ctx, remote); e != nil {
+			return e
+		}
 	}
 	conn, e := s.DB.Acquire(ctx)
 	if e != nil {
@@ -104,30 +115,45 @@ func (s *Server) build(ctx context.Context, repo, commit string) error {
 		return errors.New("repository build is already leased")
 	}
 	defer conn.Exec(context.Background(), "SELECT pg_advisory_unlock(hashtextextended($1,0))", repo)
-	gc, cleanup, e := s.remoteContext(ctx, repo, remote)
-	if e != nil {
-		return e
-	}
-	defer cleanup()
-	ctx = gc
-	dir := filepath.Join(s.Data, "git", repo)
-	if e = os.MkdirAll(dir, 0700); e != nil {
-		return e
-	}
-	if _, e = os.Stat(filepath.Join(dir, "HEAD")); os.IsNotExist(e) {
-		if _, e = s.git(ctx, dir, "init", "--bare"); e != nil {
-			return e
-		}
-	}
-	if _, e = s.git(ctx, dir, "fetch", "--no-tags", "--no-recurse-submodules", remote, ref); e != nil {
-		return e
-	}
-	if commit == "" {
-		b, e := s.git(ctx, dir, "rev-parse", "--verify", "FETCH_HEAD^{commit}")
+	dir := ""
+	if source == "managed" {
+		dir, e = s.managedPath(storage)
 		if e != nil {
 			return e
 		}
-		commit = strings.TrimSpace(string(b))
+		if commit == "" {
+			b, err := s.git(ctx, dir, "rev-parse", "--verify", ref+"^{commit}")
+			if err != nil {
+				return err
+			}
+			commit = strings.TrimSpace(string(b))
+		}
+	} else {
+		gc, cleanup, e := s.remoteContext(ctx, repo, remote)
+		if e != nil {
+			return e
+		}
+		defer cleanup()
+		ctx = gc
+		dir = filepath.Join(s.Data, "git", repo)
+		if e = os.MkdirAll(dir, 0700); e != nil {
+			return e
+		}
+		if _, e = os.Stat(filepath.Join(dir, "HEAD")); os.IsNotExist(e) {
+			if _, e = s.git(ctx, dir, "init", "--bare"); e != nil {
+				return e
+			}
+		}
+		if _, e = s.git(ctx, dir, "fetch", "--no-tags", "--no-recurse-submodules", remote, ref); e != nil {
+			return e
+		}
+		if commit == "" {
+			b, e := s.git(ctx, dir, "rev-parse", "--verify", "FETCH_HEAD^{commit}")
+			if e != nil {
+				return e
+			}
+			commit = strings.TrimSpace(string(b))
+		}
 	}
 	if !shaPattern.MatchString(commit) {
 		return errors.New("invalid full commit")

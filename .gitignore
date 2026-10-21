@@ -23,3 +23,5 @@ __pycache__/
 # Isolated documentation export
 .pages-build/
 .pages-preview/
+.data-backups/
+.restore-data-*/

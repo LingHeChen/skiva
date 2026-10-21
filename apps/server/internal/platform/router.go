@@ -13,6 +13,7 @@ func (s *Server) Router() http.Handler {
 	r.Use(rateLimit)
 	r.Use(observe)
 	r.Get("/metrics", s.metrics)
+	r.HandleFunc("/git/*", s.gitHTTP)
 	r.Get("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if e := s.DB.Ping(r.Context()); e != nil {
 			fail(w, r, 503, "DATABASE_UNAVAILABLE", "Database unavailable")
@@ -36,6 +37,22 @@ func (s *Server) Router() http.Handler {
 		r.Post("/notifications/{id}/read", s.readNotification)
 		r.Get("/repositories", s.repositories)
 		r.Get("/repositories/{id}", s.repository)
+		r.Patch("/repositories/{id}", s.repositoryManage(s.saveRepository))
+		r.Delete("/repositories/{id}", s.repositoryManage(s.deleteRepository))
+		r.Post("/repositories/{id}/test-connection", s.repositoryManage(s.repositoryAction))
+		r.Post("/repositories/{id}/sync", s.repositoryManage(s.repositoryAction))
+		r.Get("/repositories/{id}/git", s.hostingInfo)
+		r.Get("/repositories/{id}/refs", s.hostingBrowse)
+		r.Get("/repositories/{id}/commits", s.hostingBrowse)
+		r.Get("/repositories/{id}/tree", s.hostingBrowse)
+		r.Get("/repositories/{id}/diff", s.hostingBrowse)
+		r.Get("/repositories/{id}/events", s.hostingBrowse)
+		r.Get("/repositories/{id}/members", s.hostingMembers)
+		r.Put("/repositories/{id}/members", s.hostingMembers)
+		r.Patch("/repositories/{id}/policies", s.hostingPolicy)
+		r.Get("/git-tokens", s.gitTokens)
+		r.Post("/git-tokens", s.gitTokens)
+		r.Post("/git-tokens/{id}/revoke", s.gitTokens)
 		r.Get("/skills", s.skills)
 		r.Get("/skills/{id}", s.skill)
 		r.Get("/skills/{id}/versions", s.versions)
@@ -54,10 +71,7 @@ func (s *Server) Router() http.Handler {
 		r.Group(func(r chi.Router) {
 			r.Use(s.permit("repo_maintainer"))
 			r.Post("/repositories", s.saveRepository)
-			r.Patch("/repositories/{id}", s.saveRepository)
-			r.Delete("/repositories/{id}", s.deleteRepository)
-			r.Post("/repositories/{id}/test-connection", s.repositoryAction)
-			r.Post("/repositories/{id}/sync", s.repositoryAction)
+
 			r.Post("/pipelines/{id}/retry", s.retry)
 		})
 		r.Group(func(r chi.Router) {

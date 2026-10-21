@@ -72,6 +72,7 @@ test("repository form rejects private URL through authoritative API", async ({
 }) => {
   await login(page);
   await page.goto("/repositories/new");
+  await page.getByLabel("仓库来源", { exact: true }).selectOption("external");
   await page.getByLabel("仓库名称", { exact: true }).fill("unsafe-repo");
   await page.getByLabel("Git URL", { exact: true }).fill("file:///etc/passwd");
   await page.getByRole("button", { name: "保存配置" }).click();

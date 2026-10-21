@@ -5,11 +5,12 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"skiva/packages/protocol"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
 	"path/filepath"
+	"skiva/apps/server/internal/platform"
+	"skiva/packages/protocol"
 	"strings"
 	"time"
 )
@@ -84,6 +85,11 @@ func run() error {
 	}
 	if bad > 0 {
 		return fmt.Errorf("%d referenced objects missing or corrupt", bad)
+	}
+	if mode == "verify" {
+		if e := (&platform.Server{DB: db, Data: data}).VerifyManagedStorage(ctx); e != nil {
+			return e
+		}
 	}
 	if mode == "gc" {
 		entries, e := os.ReadDir(filepath.Join(data, "objects"))

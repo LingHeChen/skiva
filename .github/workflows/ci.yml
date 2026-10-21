@@ -12,6 +12,11 @@ jobs:
     env:
       GOTOOLCHAIN: go1.26.10
       SKIVA_ADMIN_PASSWORD: local-skiva-development-2026
+      SKIVA_MANAGED_GIT_ENABLED: 'true'
+      SKIVA_MANAGED_GIT_WRITE_ENABLED: 'true'
+      SKIVA_MANAGED_GIT_AUTO_CI_ENABLED: 'true'
+      SKIVA_GIT_ALLOW_LOOPBACK_HTTP: 'true'
+      SKIVA_GIT_PUBLIC_URL: http://localhost:8080
       SKIVA_WEB_ORIGIN: http://localhost:3001
       SKIVA_TEST_DATABASE_URL: postgres://skiva:skiva-dev@localhost:55432/skiva?sslmode=disable
     steps:
@@ -33,6 +38,7 @@ jobs:
           npm run dev --prefix apps/web -- --port 3001 > /tmp/skiva-web.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://localhost:3001/login >/dev/null && break || sleep 1; done
           make test-e2e
+      - run: docker build -f deployments/docker/server.Dockerfile -t skiva-server:ci .
       - uses: actions/upload-artifact@v4
         if: always()
         with: {name: evidence, path: test-results}

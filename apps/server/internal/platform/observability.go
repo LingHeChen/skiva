@@ -59,6 +59,20 @@ func observe(next http.Handler) http.Handler {
 		span.SetAttributes(attribute.String("request.id", fmt.Sprint(r.Context().Value(ctxKey("requestId")))), attribute.String("http.route", route), attribute.Int("http.response.status_code", status))
 		metricsMu.Lock()
 		apiRequests[status]++
+		if strings.HasPrefix(r.URL.Path, "/git/") {
+			service := r.URL.Query().Get("service")
+			if service == "" {
+				if strings.HasSuffix(r.URL.Path, "/git-receive-pack") {
+					service = "git-receive-pack"
+				} else {
+					service = "git-upload-pack"
+				}
+			}
+			if service != "git-receive-pack" && service != "git-upload-pack" {
+				service = "unknown"
+			}
+			gitRequests[fmt.Sprintf("service=%q,status=%q", service, fmt.Sprint(status))]++
+		}
 		if strings.HasPrefix(r.URL.Path, "/distribution/") {
 			contentRequests[status]++
 		}
@@ -68,6 +82,7 @@ func observe(next http.Handler) http.Handler {
 }
 func (s *Server) metrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; version=0.0.4")
+	s.hostingMetrics(w, r)
 	metricsMu.Lock()
 	for _, item := range []struct {
 		name string

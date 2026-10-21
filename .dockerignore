@@ -8,3 +8,5 @@ test-results
 
 .pages-build
 .pages-preview
+.data-backups
+.restore-data-*

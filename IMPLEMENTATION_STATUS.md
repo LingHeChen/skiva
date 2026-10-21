@@ -29,3 +29,9 @@ Baseline: `docs/enterprise-skills-docs`, 2026-10-21. P0–P4 baseline implementa
 - Lists use cursor APIs and 20-row UI pagination; the UI currently collects cursor pages before local filtering, so very large organizations should qualify memory/latency under their workload.
 - Pipeline discover/validate/artifact steps share one static scan interval; their displayed times overlap and are not additive.
 - Docker source build was attempted but registry base-layer download did not complete; Go and Next production builds passed independently.
+
+## Native Git hosting increment — 2026-10-21
+
+Managed/external source adaptation, additive migration 00003, recoverable bare provisioning, native Smart HTTPS, scoped PAT/repository ACL, controlled receive hooks, durable ref events with reflog reconciliation, console and ninth documentation guide are implemented. Existing Pipeline/Registry/Release/Distribution are reused. Git hosting flags default off.
+
+Local evidence: native Git CLI HTTPS clone/fetch/push and policy/ACL negative tests; Go race regression; 7 browser scenarios; 31 live API contract checks; static docs browser; Linux ARM64 FUSE; isolated DB/bare/CAS restore followed by Git push, fixed-SHA build, Canary release, Profile and verified manifest/blob reads. See `docs/hosting/ACCEPTANCE.md` for the exact coverage and production gates. “No remote writes” above describes the original delivery client: managed Git now accepts source writes, Distribution remains read-only.
