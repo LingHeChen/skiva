@@ -1,5 +1,7 @@
 # Agent integration
 
+English · [简体中文](AGENT_INTEGRATION.zh-CN.md)
+
 The client provides a filesystem. An Agent can maintain its own discovery index or loaded prompt text, so a successful FUSE refresh does not prove that a running Agent has refreshed its internal state.
 
 ## Project adapters
@@ -50,6 +52,6 @@ Check the official docs for the deployed version:
 
 These references identify configuration conventions, not runtime acceptance evidence. Symlink behavior has varied by Agent version; direct mounts are preferable when available. Never promise an in-memory Agent index will refresh merely because dynamic FUSE opens see a new snapshot.
 
-## 本地真实 Pydantic AI 验收
+## Local Pydantic AI acceptance
 
-参见 [可运行的 Pydantic AI 示例](../examples/pydantic-agent/README.md)。示例通过原生 Git 发布报销审批 Skill，让真实模型通过 Linux FUSE 读取规则，并验证动态更新、固定版本、渠道回滚和凭据撤销。结果与 OpenTelemetry 记录保存在本地 `.data/agent-pilot/`。
+See the [runnable Pydantic AI example](../examples/pydantic-agent/README.md). It publishes a reimbursement Skill through hosted Git, lets a real model read rules through Linux FUSE, and checks dynamic updates, pinned versions, channel rollback, and credential revocation. Results and OpenTelemetry records stay in local `.data/agent-pilot/`.

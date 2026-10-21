@@ -1,4 +1,5 @@
 "use client";
+import { useI18n } from "@/lib/i18n";
 
 import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
@@ -43,6 +44,8 @@ function CommandDialog({
   className?: string;
   showCloseButton?: boolean;
 }) {
+  const { t } = useI18n();
+
   return (
     <Dialog {...props}>
       <DialogContent
@@ -50,24 +53,26 @@ function CommandDialog({
         showCloseButton={false}
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle>{t(title)}</DialogTitle>
+          <DialogDescription>{t(description)}</DialogDescription>
         </DialogHeader>
         <Command>
           {children}
           <div className="command-footer" aria-hidden="true">
             <span>
               <kbd>↑</kbd>
-              <kbd>↓</kbd> 选择
+              <kbd>↓</kbd>
+              {t("选择")}
             </span>
             <span>
-              <kbd>↵</kbd> 打开
+              <kbd>↵</kbd>
+              {t("打开")}
             </span>
             <span className="command-footer-brand">SKIVA</span>
           </div>
         </Command>
         {showCloseButton && (
-          <DialogClose className="command-dismiss" aria-label="关闭搜索">
+          <DialogClose className="command-dismiss" aria-label={t("关闭搜索")}>
             <kbd>esc</kbd>
           </DialogClose>
         )}

@@ -1,4 +1,8 @@
 import { test, expect } from "../../apps/web/node_modules/@playwright/test";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("skiva-locale", "zh"));
+});
 async function login(page: any) {
   await page.goto("/login");
   await page

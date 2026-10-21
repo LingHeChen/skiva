@@ -1,39 +1,41 @@
-# 本地 Pydantic AI 试点
+# Local Pydantic AI pilot
 
-这个可重复运行的示例用真实 MiniMax 模型判断一笔 **150 元**的模拟报销。Agent 的 `read_skill` 工具通过 `docker exec cat` 读取 **Linux 内核 FUSE 挂载**；Skill 从 Skiva 原生 Git 仓库经过流水线、不可变版本、发布快照、渠道和 Profile 交付。模型本身在宿主机 Python 进程运行。
+English · [简体中文](README.zh-CN.md)
 
-## 启动
+This repeatable example uses a real MiniMax model to decide a simulated **150-unit reimbursement**. The Agent's `read_skill` tool uses `docker exec cat` to read a **Linux kernel FUSE mount**. The Skill travels through hosted Git, validation, immutable versions, snapshots, a channel, and a Profile. The model runs in a Python process on the host.
 
-已验证环境：macOS ARM64、Docker Desktop、Go 1.26.10、uv / Python 3.12。需要 Docker 的 `/dev/fuse`，示例容器拥有 FUSE 必需的 `SYS_ADMIN` 能力，仅用于本地受控试点。此脚本依赖 Docker Desktop 的 `host.docker.internal`，不是 Linux 服务器部署脚本。
+## Start
 
-在项目根目录的 `.env.local` 设置现有管理员配置（`SKIVA_ADMIN_EMAIL`、`SKIVA_ADMIN_PASSWORD`）；模型凭据通过环境提供：
+Verified environment: macOS ARM64, Docker Desktop, Go 1.26.10, uv / Python 3.12. Docker must provide `/dev/fuse`. The example container gets `SYS_ADMIN` for FUSE and is intended only for a controlled local pilot. It depends on Docker Desktop's `host.docker.internal`; it is not a Linux server deployment script.
 
-- `MINIMAX_M2_BASE_URL`：Anthropic 兼容端点。
-- `MINIMAX_M2_AUTH_TOKEN`：模型密钥。
-- `MINIMAX_M2_MODEL`：模型名，默认 `MiniMax-M2`。
+Set administrator configuration (`SKIVA_ADMIN_EMAIL`, `SKIVA_ADMIN_PASSWORD`) in the root `.env.local`. Supply model credentials through environment variables:
+
+- `MINIMAX_M2_BASE_URL`: Anthropic-compatible endpoint.
+- `MINIMAX_M2_AUTH_TOKEN`: model API key.
+- `MINIMAX_M2_MODEL`: model name; defaults to `MiniMax-M2`.
 
 ```bash
 ./examples/pydantic-agent/run.sh
 ```
 
-脚本复用开发 PostgreSQL 容器，创建独立数据库 `skiva_agent_pilot`，使用 `.data/agent-pilot/server` 和 `127.0.0.1:8083`。**8083 必须只由此试点后端占用**。管理页面原有的 3001 / 8080 服务仍连接原开发数据库。每次运行创建带随机后缀的独立仓库和 Profile，只操作试点数据库中的 canary 渠道。
+The script reuses the development PostgreSQL container, creates an isolated `skiva_agent_pilot` database, and uses `.data/agent-pilot/server` and `127.0.0.1:8083`. **Port 8083 must belong exclusively to this pilot backend.** Existing development services keep their original database. Each run creates randomly suffixed repositories and Profiles and modifies only the pilot database's canary channel.
 
-首次准备需要下载依赖和安装容器内 fuse3。模型调用会使用已有账户额度。示例仅发送模拟报销规则与金额。
+First-time setup downloads dependencies and installs fuse3 in the container. Model requests use your account quota and send only simulated reimbursement rules and amounts.
 
-## 验收场景
+## Scenarios
 
-| 场景 | Agent 应读取 | 150 元结果 |
+| Scenario | Content read by the Agent | Result for 150 units |
 | --- | --- | --- |
-| 首次发布 | v1：限额 100 元 | 拒绝 |
-| 推送并发布更新 | dynamic 更新到 v2：限额 200 元 | 通过 |
-| 已固定的任务 | pinned 保持 v1 | 拒绝 |
-| 渠道回滚 | dynamic 回到 v1 | 拒绝 |
-| 撤销客户端凭据 | dynamic、pinned 均拒绝文件读取 | 不再调用模型 |
+| Initial publication | v1: limit 100 | Reject |
+| Push and publish update | dynamic follows v2: limit 200 | Approve |
+| Already pinned task | pinned retains v1 | Reject |
+| Channel rollback | dynamic returns to v1 | Reject |
+| Credential revocation | Both mounts deny file reads | No further model call |
 
-每次发布都走 Git push、固定 SHA 流水线和发布 API；渠道写入带 generation 和幂等键。模型结果由 Pydantic 校验，并由脚本断言策略版本、限额和审批结果。结束时撤销测试 Git PAT 和客户端凭据、删除临时令牌文件；挂载因此不再可读。
+Every release uses Git push, a fixed-SHA pipeline, and the release API. Channel writes include generation and idempotency keys. Pydantic validates model output; the script asserts policy version, limit, and decision. At completion it revokes the test Git PAT and client credentials and deletes temporary token files; mounts can no longer read.
 
-结果保存在 `.data/agent-pilot/results.json`，本地 OpenTelemetry spans 保存在 `.data/agent-pilot/traces.jsonl`（不记录提示词正文，不发送至托管追踪服务）。依赖版本锁定在 `requirements.txt`。
+Results are written to `.data/agent-pilot/results.json`. Local OpenTelemetry spans go to `.data/agent-pilot/traces.jsonl` without prompt bodies or hosted tracing. Dependencies are pinned in `requirements.txt`.
 
-重新运行即可再次演示。停止 FUSE 容器：`docker stop skiva-agent-fuse`；再次运行脚本会自动恢复。后端由脚本首次启动时，其 PID 写在 `.data/agent-pilot/server.pid`，确认进程后可停止。数据库与发布历史保留用于检查，不自动删除。
+Rerun the script to repeat the demonstration. Stop FUSE with `docker stop skiva-agent-fuse`; the next run restores it. If the script starts the backend, its PID is recorded in `.data/agent-pilot/server.pid`; verify the process before stopping it. The database and release history remain for inspection.
 
-这项验收覆盖单机、单 Agent 的发布消费闭环。它不代表企业 SSO、长期运行、多租户负载或故障恢复已经完成生产验收。
+This qualifies a single-host, single-Agent release/consumption workflow. It does not qualify enterprise SSO, long-running behavior, multi-tenant load, or production disaster recovery.

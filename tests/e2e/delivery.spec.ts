@@ -1,4 +1,8 @@
 import { test, expect } from "../../apps/web/node_modules/@playwright/test";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("skiva-locale", "zh"));
+});
 test("real Git build → immutable release → canary → profile → credential rotation", async ({
   page,
 }) => {
@@ -71,7 +75,7 @@ test("real Git build → immutable release → canary → profile → credential
   await page.getByRole("button", { name: "已安全保存" }).click();
   await page.getByRole("button", { name: "吊销终端" }).click();
   await page.getByRole("button", { name: "确认操作" }).click();
-  await expect(page.getByText("revoked", { exact: true })).toBeVisible();
+  await expect(page.getByText("已吊销", { exact: true })).toBeVisible();
   await page.screenshot({
     path: "../../test-results/screenshots/client-revoked.png",
     fullPage: true,

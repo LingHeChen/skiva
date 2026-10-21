@@ -25,6 +25,7 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - uses: actions/configure-pages@v5
       - run: npm ci --prefix apps/web
+      - run: node scripts/check-i18n.mjs
       - run: npm run build:docs --prefix apps/web
         env:
           SKIVA_DOCS_BASE_PATH: /skiva

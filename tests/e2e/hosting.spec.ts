@@ -1,4 +1,8 @@
 import { test, expect } from "../../apps/web/node_modules/@playwright/test";
+
+test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("skiva-locale", "zh"));
+});
 test("managed repository creation, history, token lifecycle, policies and mobile", async ({
   page,
 }) => {
@@ -28,11 +32,11 @@ test("managed repository creation, history, token lifecycle, policies and mobile
     panel.getByRole("heading", { name: "平台托管 · Git" }),
   ).toBeVisible();
   await expect(panel).toContainText("/git/browser-team/" + slug + ".git");
-  await panel.getByRole("button", { name: "Commits", exact: true }).click();
+  await panel.getByRole("button", { name: "提交", exact: true }).click();
   await expect(panel).toContainText("Initialize skill", { timeout: 20000 });
-  await panel.getByRole("button", { name: "Files", exact: true }).click();
+  await panel.getByRole("button", { name: "文件", exact: true }).click();
   await expect(panel).toContainText("SKILL.md");
-  await panel.getByRole("button", { name: "Diff", exact: true }).click();
+  await panel.getByRole("button", { name: "差异", exact: true }).click();
   await expect(panel.locator("pre")).toContainText("SKILL.md");
   await panel.getByRole("button", { name: "Git Token", exact: true }).click();
   await panel
@@ -68,7 +72,7 @@ test("managed repository creation, history, token lifecycle, policies and mobile
       ),
     )
     .toBeTruthy();
-  await page.goto("/docs/managed-git");
+  await page.goto("/docs/zh/managed-git");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "托管 Git",
   );

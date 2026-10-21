@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n";
+
 import { BrandLogo } from "./brand";
 
 import {
@@ -23,7 +25,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { docs, docHref } from "@/content/docs";
+import { getDocs, docHref } from "@/content/docs";
 
 function textOf(node: ReactNode): string {
   if (typeof node === "string" || typeof node === "number") return String(node);
@@ -42,13 +44,15 @@ const anchor = (value: string) =>
     .replace(/^-|-$/g, "");
 
 function CodeBlock({ children }: { children?: ReactNode }) {
+  const { t } = useI18n();
+
   const [status, setStatus] = useState("");
   const code = textOf(children).replace(/\n$/, "");
   return (
     <div className="docs-code">
       <button
         type="button"
-        aria-label="复制代码"
+        aria-label={t("复制代码")}
         onClick={async () => {
           try {
             await navigator.clipboard.writeText(code);
@@ -59,17 +63,21 @@ function CodeBlock({ children }: { children?: ReactNode }) {
         }}
       >
         {status === "已复制" ? <Check size={14} /> : <Copy size={14} />}
-        <span>{status || "复制"}</span>
+        <span>{status ? t(status) : t("复制")}</span>
       </button>
       <pre>{children}</pre>
       <span className="docs-sr" role="status">
-        {status}
+        {t(status)}
       </span>
     </div>
   );
 }
 
 export function Documentation({ slug }: { slug: string }) {
+  const { t, locale, setLocale } = useI18n();
+
+  const docs = getDocs(locale);
+  const href = (slug: string) => docHref(slug, locale);
   const pageIndex = docs.findIndex((doc) => doc.slug === slug);
   const doc = docs[pageIndex];
   const [query, setQuery] = useState("");
@@ -152,46 +160,54 @@ export function Documentation({ slug }: { slug: string }) {
             .map((item) => (
               <Link
                 key={item.slug}
-                href={docHref(item.slug)}
+                href={href(item.slug)}
                 aria-current={item.slug === slug ? "page" : undefined}
                 onClick={() => setMobile(false)}
               >
                 {item.slug === "" && <BookOpen size={15} />}
-                {item.slug === "" ? "文档概览" : item.title}
+                {item.slug === "" ? t("文档概览") : item.title}
               </Link>
             ))}
         </div>
       ))}
       <div className="docs-nav-note">
         <span className="docs-dot" />
-        首发版本指南
+        {t("首发版本指南")}
         <br />
-        <small>以当前实现为准 · 中文</small>
+        <small>{t("以当前实现为准 · 中文")}</small>
       </div>
     </>
   );
 
   return (
-    <div className="docs-site">
+    <div className="docs-site" lang={locale === "zh" ? "zh-CN" : "en"}>
       <a className="docs-skip" href="#docs-content">
-        跳转到正文
+        {t("跳转到正文")}
       </a>
       <header className="docs-header">
         <button
           ref={menuRef}
           type="button"
           className="docs-menu"
-          aria-label="打开文档导航"
+          aria-label={t("打开文档导航")}
           disabled={!ready}
           aria-expanded={mobile}
           onClick={() => setMobile(true)}
         >
           <Menu size={20} />
         </button>
-        <Link href="/docs" className="docs-brand">
+        <Link href={href("")} className="docs-brand">
           <BrandLogo />
           <span className="docs-brand-divider" />
-          <span>文档</span>
+          <span>{t("文档")}</span>
+        </Link>
+        <Link
+          className="language-switch"
+          onClick={() => setLocale(locale === "en" ? "zh" : "en")}
+          href={docHref(slug, locale === "en" ? "zh" : "en")}
+          aria-label={locale === "en" ? "Switch to Chinese" : "切换为英文"}
+        >
+          {locale === "en" ? "中文" : "EN"}
         </Link>
         <div className="docs-search">
           <Search size={16} />
@@ -199,13 +215,13 @@ export function Documentation({ slug }: { slug: string }) {
             ref={searchRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索文档…"
-            aria-label="搜索文档"
+            placeholder={t("搜索文档…")}
+            aria-label={t("搜索文档")}
             aria-controls={query ? "docs-results" : undefined}
           />
           <kbd>⌘ K</kbd>
           {query && (
-            <button aria-label="清空搜索" onClick={() => setQuery("")}>
+            <button aria-label={t("清空搜索")} onClick={() => setQuery("")}>
               <X size={15} />
             </button>
           )}
@@ -213,13 +229,13 @@ export function Documentation({ slug }: { slug: string }) {
             <div className="docs-results" id="docs-results">
               <p role="status">
                 {matches.length
-                  ? `找到 ${matches.length} 篇文档`
-                  : "没有匹配结果，试试“快照”或“流水线”"}
+                  ? t("找到 {count} 篇文档", { count: matches.length })
+                  : t("没有匹配结果，试试“快照”或“流水线”")}
               </p>
               {matches.map((item) => (
                 <Link
                   key={item.slug}
-                  href={docHref(item.slug)}
+                  href={href(item.slug)}
                   onClick={() => setQuery("")}
                 >
                   <strong>{item.title}</strong>
@@ -242,7 +258,7 @@ export function Documentation({ slug }: { slug: string }) {
         <button
           type="button"
           className="docs-theme"
-          aria-label={dark ? "切换浅色主题" : "切换深色主题"}
+          aria-label={dark ? t("切换浅色主题") : t("切换深色主题")}
           onClick={() => {
             const next = !dark;
             setDark(next);
@@ -256,12 +272,12 @@ export function Documentation({ slug }: { slug: string }) {
           className="docs-console-link"
           href={docsOnly ? "https://github.com/LingHeChen/skiva" : "/dashboard"}
         >
-          {docsOnly ? "GitHub" : "控制台"} <ArrowRight size={15} />
+          {docsOnly ? "GitHub" : t("控制台")} <ArrowRight size={15} />
         </Link>
       </header>
       <div className="docs-layout">
         <aside className="docs-sidebar">
-          <nav aria-label="文档章节">{navigation}</nav>
+          <nav aria-label={t("文档章节")}>{navigation}</nav>
         </aside>
         {mobile && (
           <>
@@ -271,10 +287,10 @@ export function Documentation({ slug }: { slug: string }) {
               className="docs-drawer"
               role="dialog"
               aria-modal="true"
-              aria-label="文档导航"
+              aria-label={t("文档导航")}
             >
               <button
-                aria-label="关闭文档导航"
+                aria-label={t("关闭文档导航")}
                 onClick={() => setMobile(false)}
               >
                 <X size={20} />
@@ -285,43 +301,46 @@ export function Documentation({ slug }: { slug: string }) {
         )}
         <main id="docs-content" className="docs-main">
           <div className="docs-eyebrow">
-            SKIVA HANDBOOK <span>/</span> {doc.group}
+            {t("SKIVA HANDBOOK")}
+            <span>/</span> {doc.group}
           </div>
           <h1>{doc.title}</h1>
           <p className="docs-lead">{doc.description}</p>
           {!slug && (
             <div className="docs-start">
-              <Link href="/docs/quickstart">
-                开始第一次发布 <ArrowRight size={17} />
+              <Link href={href("quickstart")}>
+                {t("开始第一次发布")}
+                <ArrowRight size={17} />
               </Link>
-              <Link href="/docs/pipelines">
-                了解流水线配置 <ArrowRight size={15} />
+              <Link href={href("pipelines")}>
+                {t("了解流水线配置")}
+                <ArrowRight size={15} />
               </Link>
             </div>
           )}
           {!slug && (
-            <div className="docs-delivery" aria-label="交付流程">
+            <div className="docs-delivery" aria-label={t("交付流程")}>
               <div>
-                <small>01 / SOURCE</small>
-                <strong>Git 提交</strong>
-                <span>可追溯的内容来源</span>
+                <small>{t("01 / SOURCE")}</small>
+                <strong>{t("Git 提交")}</strong>
+                <span>{t("可追溯的内容来源")}</span>
               </div>
               <ArrowRight size={20} />
               <div>
-                <small>02 / VERIFY</small>
-                <strong>校验与快照</strong>
-                <span>固定、完整、不可变</span>
+                <small>{t("02 / VERIFY")}</small>
+                <strong>{t("校验与快照")}</strong>
+                <span>{t("固定、完整、不可变")}</span>
               </div>
               <ArrowRight size={20} />
               <div>
-                <small>03 / DELIVER</small>
-                <strong>渠道与 Agent</strong>
-                <span>按授权交付与回滚</span>
+                <small>{t("03 / DELIVER")}</small>
+                <strong>{t("渠道与 Agent")}</strong>
+                <span>{t("按授权交付与回滚")}</span>
               </div>
             </div>
           )}
           <details className="docs-inline-toc">
-            <summary>本页目录</summary>
+            <summary>{t("本页目录")}</summary>
             {sections.map((title) => (
               <a key={title} href={`#${anchor(title)}`}>
                 {title}
@@ -343,11 +362,20 @@ export function Documentation({ slug }: { slug: string }) {
                   docsOnly &&
                   href?.startsWith("/") &&
                   !href.startsWith("/docs") ? (
-                    <span title="在自部署的 Skiva 管理端中打开">
-                      {children}（管理端）
+                    <span title={t("在自部署的 Skiva 管理端中打开")}>
+                      {children}
+                      {t("（管理端）")}
                     </span>
                   ) : href?.startsWith("/") ? (
-                    <Link href={href}>{children}</Link>
+                    <Link
+                      href={
+                        href.startsWith("/docs")
+                          ? docHref(href.replace(/^\/docs\/?/, ""), locale)
+                          : href
+                      }
+                    >
+                      {children}
+                    </Link>
                   ) : (
                     <a href={href}>{children}</a>
                   ),
@@ -356,7 +384,7 @@ export function Documentation({ slug }: { slug: string }) {
                     className="docs-table"
                     tabIndex={0}
                     role="region"
-                    aria-label="参考表格"
+                    aria-label={t("参考表格")}
                   >
                     <table>{children}</table>
                   </div>
@@ -367,14 +395,15 @@ export function Documentation({ slug }: { slug: string }) {
             </ReactMarkdown>
           </article>
           <div className="docs-page-footer">
-            <span>SKIVA · 操作手册</span>
-            <a href="#docs-content">回到顶部 ↑</a>
+            <span>{t("SKIVA · 操作手册")}</span>
+            <a href="#docs-content">{t("回到顶部 ↑")}</a>
           </div>
-          <nav className="docs-pagination" aria-label="文档翻页">
+          <nav className="docs-pagination" aria-label={t("文档翻页")}>
             {pageIndex > 0 ? (
-              <Link href={docHref(docs[pageIndex - 1].slug)}>
+              <Link href={href(docs[pageIndex - 1].slug)}>
                 <small>
-                  <ArrowLeft size={13} /> 上一篇
+                  <ArrowLeft size={13} />
+                  {t("上一篇")}
                 </small>
                 <strong>{docs[pageIndex - 1].title}</strong>
               </Link>
@@ -382,9 +411,10 @@ export function Documentation({ slug }: { slug: string }) {
               <span />
             )}
             {pageIndex < docs.length - 1 && (
-              <Link href={docHref(docs[pageIndex + 1].slug)}>
+              <Link href={href(docs[pageIndex + 1].slug)}>
                 <small>
-                  下一篇 <ArrowRight size={13} />
+                  {t("下一篇")}
+                  <ArrowRight size={13} />
                 </small>
                 <strong>{docs[pageIndex + 1].title}</strong>
               </Link>
@@ -392,8 +422,8 @@ export function Documentation({ slug }: { slug: string }) {
           </nav>
         </main>
         <aside className="docs-toc">
-          <p>本页目录</p>
-          <nav aria-label="本页目录">
+          <p>{t("本页目录")}</p>
+          <nav aria-label={t("本页目录")}>
             {sections.map((title) => (
               <a key={title} href={`#${anchor(title)}`}>
                 {title}
@@ -401,9 +431,9 @@ export function Documentation({ slug }: { slug: string }) {
             ))}
           </nav>
           <div className="docs-toc-note">
-            先验证，再交付。
+            {t("先验证，再交付。")}
             <br />
-            每次发布都可以追溯。
+            {t("每次发布都可以追溯。")}
           </div>
         </aside>
       </div>

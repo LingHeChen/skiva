@@ -1,18 +1,20 @@
-# 单机预生产部署模板
+# Single-host preproduction deployment
 
-此模板提供 PostgreSQL、独立迁移任务、后端、前端、Caddy TLS 和可选 Prometheus。当前完成 Compose 配置校验；企业 OIDC、实际域名证书和告警接收方需要部署环境验证。当前本地 Agent 试点使用 `examples/pydantic-agent`，不依赖此模板。
+English · [简体中文](README.zh-CN.md)
 
-设置 Compose 插值环境：`SKIVA_SERVER_IMAGE`、`SKIVA_WEB_IMAGE`（使用不可变镜像版本）、`SKIVA_DOMAIN`、`SKIVA_ACME_EMAIL`、`SKIVA_ADMIN_EMAIL`、`SKIVA_OIDC_ISSUER`、`SKIVA_OIDC_CLIENT_ID`、`SKIVA_SECRETS_DIR`（绝对路径）。
+This template provides PostgreSQL, a separate migration job, backend, frontend, Caddy TLS, and optional Prometheus. Compose configuration has been validated locally. Enterprise OIDC, actual domain certificates, and alert delivery require deployment-specific verification. The local Agent pilot in `examples/pydantic-agent` does not depend on this template.
 
-密钥目录包含四个文件：`db_password`、`database_url`（指向 Compose 内 postgres:5432/skiva）、`bootstrap_password`、`oidc_secret`。目录只允许部署管理员访问；文件需允许容器 UID 10001 读取。不要提交密钥。后端支持相应环境变量的 `_FILE` 形式，同时配置明文与文件会拒绝启动。
+Set Compose variables: `SKIVA_SERVER_IMAGE`, `SKIVA_WEB_IMAGE` (immutable image versions), `SKIVA_DOMAIN`, `SKIVA_ACME_EMAIL`, `SKIVA_ADMIN_EMAIL`, `SKIVA_OIDC_ISSUER`, `SKIVA_OIDC_CLIENT_ID`, and `SKIVA_SECRETS_DIR` (absolute path).
+
+The secrets directory contains `db_password`, `database_url` (targeting Compose postgres:5432/skiva), `bootstrap_password`, and `oidc_secret`. Restrict directory access to deployment administrators and allow container UID 10001 to read the files. Do not commit secrets. The server supports corresponding `_FILE` environment variables and rejects conflicting plaintext/file configuration.
 
 ```bash
 docker compose -f deployments/preproduction/compose.yaml config --quiet
 docker compose -f deployments/preproduction/compose.yaml up -d
 ```
 
-数据库迁移成功且后端健康后才启动后续服务。Caddy 对外公开 80/443；数据库、后端不发布端口，公网不提供 `/metrics`。前端镜像应按 `deployments/docker/web.Dockerfile` 构建。OIDC 回调、授权用户和浏览器登录必须在目标 IdP 上验证后开放使用。
+Frontend and dependent services start after successful migration and a healthy backend. Caddy exposes 80/443; PostgreSQL and backend ports are not published, and /metrics is not public. Build the frontend with `deployments/docker/web.Dockerfile`. Verify OIDC callbacks, authorized users, and browser sign-in against the actual IdP before opening access.
 
-Git 托管三个功能开关默认关闭。依次设置 `SKIVA_MANAGED_GIT_ENABLED`、`SKIVA_MANAGED_GIT_WRITE_ENABLED`、`SKIVA_MANAGED_GIT_AUTO_CI_ENABLED=true` 启用。`SKIVA_GIT_TRUST_PROXY=true` 仅适用于后端不直接对外暴露的当前拓扑。
+Git hosting flags are disabled by default. Gradually enable `SKIVA_MANAGED_GIT_ENABLED`, `SKIVA_MANAGED_GIT_WRITE_ENABLED`, and `SKIVA_MANAGED_GIT_AUTO_CI_ENABLED=true`. `SKIVA_GIT_TRUST_PROXY=true` assumes this topology prevents direct backend access.
 
-使用 `--profile monitoring` 启动本机 127.0.0.1:9090 的 Prometheus。配置真实 Alertmanager 才会发送告警。此模板不自动执行备份；正式试点前按 `docs/OPERATIONS.md` 做数据库、CAS、Git 裸仓库的一致备份与恢复演练。
+Use `--profile monitoring` to start Prometheus at local 127.0.0.1:9090. Configure a real Alertmanager to deliver alerts. Backups are not scheduled automatically: before a formal pilot, follow [Operations](../../docs/OPERATIONS.md) to back up and restore PostgreSQL, CAS, and bare Git repositories consistently.

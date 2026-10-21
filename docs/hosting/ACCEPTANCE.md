@@ -1,5 +1,7 @@
 # Managed Git acceptance record
 
+English · [简体中文](ACCEPTANCE.zh-CN.md)
+
 2026-10-21. Implementation is incremental; production rollout remains gated by the target environment.
 
 | Gate | Executed local evidence |

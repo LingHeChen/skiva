@@ -1,4 +1,6 @@
 "use client";
+import { useI18n } from "@/lib/i18n";
+
 import { Card } from "./ui/card";
 import { FormInput } from "./ui/form-input";
 import { NativeSelect, NativeSelectOption } from "./ui/native-select";
@@ -23,6 +25,8 @@ type Policy = {
   maxFiles: number;
 };
 function CopyText({ value }: { value: string }) {
+  const { t } = useI18n();
+
   const [note, setNote] = useState("");
   return (
     <span className="hosting-copy">
@@ -38,13 +42,15 @@ function CopyText({ value }: { value: string }) {
           }
         }}
       >
-        复制
+        {t("复制")}
       </Button>
-      <span role="status">{note}</span>
+      <span role="status">{t(note)}</span>
     </span>
   );
 }
 export function ManagedRepository({ id }: { id: string }) {
+  const { t, locale } = useI18n();
+
   const router = useRouter();
   const [danger, setDanger] = useState("");
   const root = "/repositories/" + id,
@@ -57,7 +63,7 @@ export function ManagedRepository({ id }: { id: string }) {
     [busy, setBusy] = useState(false),
     [secret, setSecret] = useState("");
   const [revoke, setRevoke] = useState(""),
-    [name, setName] = useState("我的开发电脑"),
+    [name, setName] = useState(t("我的开发电脑")),
     [days, setDays] = useState(30),
     [write, setWrite] = useState(false);
   const [policy, setPolicy] = useState<Policy | null>(null),
@@ -102,7 +108,7 @@ export function ManagedRepository({ id }: { id: string }) {
       setMessage("操作成功");
       return result;
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "操作失败，请重试");
+      setMessage(e instanceof Error ? e.message : t("操作失败，请重试"));
     } finally {
       setBusy(false);
     }
@@ -110,14 +116,14 @@ export function ManagedRepository({ id }: { id: string }) {
   if (info.isPending)
     return (
       <Card className="panel detail-panel" aria-busy="true">
-        正在读取托管仓库…
+        {t("正在读取托管仓库…")}
       </Card>
     );
   if (info.error)
     return (
       <Card className="panel detail-panel">
-        <p role="alert">{info.error.message}</p>
-        <Button onClick={() => info.refetch()}>重试</Button>
+        <p role="alert">{t(info.error.message)}</p>
+        <Button onClick={() => info.refetch()}>{t("重试")}</Button>
       </Card>
     );
   const git = info.data,
@@ -127,36 +133,43 @@ export function ManagedRepository({ id }: { id: string }) {
     <Card className="panel detail-panel hosting-panel">
       <div className="section-heading">
         <div>
-          <h2>平台托管 · Git</h2>
+          <h2>{t("平台托管 · Git")}</h2>
           <p className="muted">
-            Push 接收代码，流水线校验内容，发布快照决定 Agent 使用的版本。
+            {t(
+              "Push 接收代码，流水线校验内容，发布快照决定 Agent 使用的版本。",
+            )}
           </p>
         </div>
-        <Link href="/docs/managed-git">操作指南 →</Link>
+        <Link href="/docs/managed-git">{t("操作指南 →")}</Link>
       </div>
       <CopyText value={git.cloneUrl} />
       <CopyText value={"git clone " + git.cloneUrl} />
       <CopyText value="git push origin main" />
       <p className="info-note">
-        使用 Git Token 作为 HTTPS 密码。用户名可以填写你的账号；权限由 Token
-        所属用户和仓库成员身份决定。
+        {t(
+          "使用 Git Token 作为 HTTPS 密码。用户名可以填写你的账号；权限由 Token 所属用户和仓库成员身份决定。",
+        )}
       </p>
       {git.provisionState !== "active" && (
         <p role="status">
-          仓库准备状态：{git.provisionState}。后台会自动重试，页面会更新状态。
+          {t("仓库准备状态：")}
+          {t(git.provisionState)}
+          {t("。后台会自动重试，页面会更新状态。")}
         </p>
       )}
-      {!git.writeEnabled && <p role="status">管理员尚未启用 Git 写入。</p>}
-      <nav className="hosting-tabs" aria-label="托管仓库视图">
+      {!git.writeEnabled && (
+        <p role="status">{t("管理员尚未启用 Git 写入。")}</p>
+      )}
+      <nav className="hosting-tabs" aria-label={t("托管仓库视图")}>
         {[
-          ["events", "Push 活动"],
+          ["events", t("Push 活动")],
           ["commits", "Commits"],
           ["refs", "Branches / Tags"],
           ["tree", "Files"],
           ["diff", "Diff"],
           ["tokens", "Git Token"],
-          ["members", "仓库成员"],
-          ["policies", "仓库策略"],
+          ["members", t("仓库成员")],
+          ["policies", t("仓库策略")],
         ].map(([key, label]) => (
           <Button
             key={key}
@@ -167,33 +180,33 @@ export function ManagedRepository({ id }: { id: string }) {
               setOffset(0);
             }}
           >
-            {label}
+            {t(label)}
           </Button>
         ))}
       </nav>
-      <p role="status" aria-label="托管操作结果">
-        {message}
+      <p role="status" aria-label={t("托管操作结果")}>
+        {t(message)}
       </p>
       {["commits", "tree", "diff"].includes(tab) && (
         <div className="hosting-fields">
           <Label>
-            Commit SHA 或 refs/heads/main
+            {t("Commit SHA 或 refs/heads/main")}
             <FormInput
               value={commit}
               onChange={(e) => {
                 setCommit(e.target.value);
                 setOffset(0);
               }}
-              placeholder="留空使用默认分支"
+              placeholder={t("留空使用默认分支")}
             />
           </Label>
           {tab === "diff" && (
             <Label>
-              对比起点（完整 SHA）
+              {t("对比起点（完整 SHA）")}
               <FormInput
                 value={base}
                 onChange={(e) => setBase(e.target.value)}
-                placeholder="留空显示该提交的改动"
+                placeholder={t("留空显示该提交的改动")}
               />
             </Label>
           )}
@@ -201,16 +214,16 @@ export function ManagedRepository({ id }: { id: string }) {
       )}
       {!["tokens", "policies"].includes(tab) && (
         <>
-          {data.isPending && <p aria-busy="true">正在加载…</p>}
+          {data.isPending && <p aria-busy="true">{t("正在加载…")}</p>}
           {data.error && (
             <div role="alert">
-              <p>{data.error.message}</p>
-              <Button onClick={() => data.refetch()}>重试</Button>
+              <p>{t(data.error.message)}</p>
+              <Button onClick={() => data.refetch()}>{t("重试")}</Button>
             </div>
           )}
           {data.data?.items?.length === 0 && (
             <p className="muted">
-              暂无记录。空仓库需要先提交一个包含 SKILL.md 的版本。
+              {t("暂无记录。空仓库需要先提交一个包含 SKILL.md 的版本。")}
             </p>
           )}
           {tab === "events" &&
@@ -221,7 +234,9 @@ export function ManagedRepository({ id }: { id: string }) {
                 <span>
                   {v.error ||
                     v.jobStatus ||
-                    (v.processedAt ? "已记录，不触发构建" : "等待自动构建")}
+                    (v.processedAt
+                      ? t("已记录，不触发构建")
+                      : t("等待自动构建"))}
                 </span>
                 {v.pipelines?.map((run: any) => (
                   <Link key={run.id} href={"/pipelines/" + run.id}>
@@ -245,7 +260,10 @@ export function ManagedRepository({ id }: { id: string }) {
                 </Button>
                 <span>{v.subject}</span>
                 <small>
-                  {v.author} · {new Date(v.date).toLocaleString()}
+                  {v.author} ·{" "}
+                  {new Date(v.date).toLocaleString(
+                    locale === "zh" ? "zh-CN" : "en",
+                  )}
                 </small>
               </div>
             ))}
@@ -269,17 +287,23 @@ export function ManagedRepository({ id }: { id: string }) {
             data.data?.items?.map((v: any) => (
               <div className="history-row" key={v.path}>
                 <code>{v.path}</code>
-                <span>{v.size} bytes</span>
+                <span>
+                  {v.size}
+                  {t("bytes")}
+                </span>
               </div>
             ))}
           {tab === "diff" && data.data && (
             <>
               <p>
-                固定提交：<code>{data.data.commit}</code>
+                {t("固定提交：")}
+                <code>{data.data.commit}</code>
               </p>
               {data.data.truncated && (
                 <p role="status">
-                  Diff 超过 256 KiB，已截断。完整差异请在本地执行 git diff。
+                  {t(
+                    "Diff 超过 256 KiB，已截断。完整差异请在本地执行 git diff。",
+                  )}
                 </p>
               )}
               <Button
@@ -295,10 +319,10 @@ export function ManagedRepository({ id }: { id: string }) {
                   URL.revokeObjectURL(url);
                 }}
               >
-                下载当前 Diff
+                {t("下载当前 Diff")}
               </Button>
               <pre className="hosting-diff">
-                {data.data.diff || "没有文本差异"}
+                {data.data.diff || t("没有文本差异")}
               </pre>
             </>
           )}
@@ -307,7 +331,7 @@ export function ManagedRepository({ id }: { id: string }) {
               variant="outline"
               onClick={() => setOffset(data.data.nextOffset)}
             >
-              下一页
+              {t("下一页")}
             </Button>
           )}
           {offset > 0 && (
@@ -315,20 +339,20 @@ export function ManagedRepository({ id }: { id: string }) {
               variant="outline"
               onClick={() => setOffset(Math.max(0, offset - 50))}
             >
-              上一页
+              {t("上一页")}
             </Button>
           )}
         </>
       )}
       {tab === "tokens" && (
         <div className="hosting-fields">
-          <h3>创建专用于此仓库的 Git Token</h3>
+          <h3>{t("创建专用于此仓库的 Git Token")}</h3>
           <Label>
-            名称
+            {t("名称")}
             <FormInput value={name} onChange={(e) => setName(e.target.value)} />
           </Label>
           <Label>
-            有效天数（1–90）
+            {t("有效天数（1–90）")}
             <FormInput
               type="number"
               min={1}
@@ -344,7 +368,7 @@ export function ManagedRepository({ id }: { id: string }) {
               disabled={git.accessRole === "viewer"}
               onChange={(e) => setWrite(e.target.checked)}
             />
-            允许 Push（repo:write）
+            {t("允许 Push（repo:write）")}
           </Label>
           <Button
             disabled={busy || !name || days < 1 || days > 90}
@@ -359,18 +383,18 @@ export function ManagedRepository({ id }: { id: string }) {
               if (result?.token) setSecret(result.token);
             }}
           >
-            创建 Git Token
+            {t("创建 Git Token")}
           </Button>
           {secret && (
             <div className="info-note">
-              <strong>只展示这一次，请立即保存。</strong>
+              <strong>{t("只展示这一次，请立即保存。")}</strong>
               <CopyText value={secret} />
               <Button variant="outline" onClick={() => setSecret("")}>
-                已保存，隐藏 Token
+                {t("已保存，隐藏 Token")}
               </Button>
             </div>
           )}
-          {tokens.error && <p role="alert">{tokens.error.message}</p>}
+          {tokens.error && <p role="alert">{t(tokens.error.message)}</p>}
           {tokens.data?.items
             ?.filter((v: any) => v.repositoryId === id)
             .map((v: any) => (
@@ -380,19 +404,23 @@ export function ManagedRepository({ id }: { id: string }) {
                 <span>{v.scopes.join(", ")}</span>
                 <span>
                   {v.revokedAt
-                    ? "已撤销"
-                    : "到期 " + new Date(v.expiresAt).toLocaleDateString()}
+                    ? t("已撤销")
+                    : t("到期 ") +
+                      new Date(v.expiresAt).toLocaleDateString(
+                        locale === "zh" ? "zh-CN" : "en",
+                      )}
                 </span>
                 {!v.revokedAt && (
                   <Button variant="destructive" onClick={() => setRevoke(v.id)}>
-                    撤销
+                    {t("撤销")}
                   </Button>
                 )}
               </div>
             ))}
           <p className="muted">
-            轮换：创建新 Token，更新 Git 凭据管理器，验证后撤销旧 Token。Agent
-            交付凭据不能访问 Git。
+            {t(
+              "轮换：创建新 Token，更新 Git 凭据管理器，验证后撤销旧 Token。Agent 交付凭据不能访问 Git。",
+            )}
           </p>
         </div>
       )}
@@ -407,29 +435,31 @@ export function ManagedRepository({ id }: { id: string }) {
           {maintainer && (
             <div className="hosting-fields">
               <Label>
-                用户 ID
+                {t("用户 ID")}
                 <FormInput
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
-                  placeholder="组织成员的用户 UUID"
+                  placeholder={t("组织成员的用户 UUID")}
                 />
               </Label>
               <Label>
-                仓库角色
+                {t("仓库角色")}
                 <NativeSelect
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                 >
                   <NativeSelectOption value="viewer">
-                    Viewer · 只读
+                    {t("Viewer · 只读")}
                   </NativeSelectOption>
                   <NativeSelectOption value="contributor">
-                    Contributor · 非保护分支
+                    {t("Contributor · 非保护分支")}
                   </NativeSelectOption>
                   <NativeSelectOption value="maintainer">
-                    Maintainer · 仓库管理
+                    {t("Maintainer · 仓库管理")}
                   </NativeSelectOption>
-                  <NativeSelectOption value="none">移除成员</NativeSelectOption>
+                  <NativeSelectOption value="none">
+                    {t("移除成员")}
+                  </NativeSelectOption>
                 </NativeSelect>
               </Label>
               <Button
@@ -444,7 +474,7 @@ export function ManagedRepository({ id }: { id: string }) {
                       )
                 }
               >
-                保存成员权限
+                {t("保存成员权限")}
               </Button>
             </div>
           )}
@@ -453,14 +483,17 @@ export function ManagedRepository({ id }: { id: string }) {
       {tab === "policies" && (
         <div className="hosting-fields">
           <p>
-            默认禁止强推和删除受保护分支。仓库写权限不授予发布 Stable 的权限。
+            {t(
+              "默认禁止强推和删除受保护分支。仓库写权限不授予发布 Stable 的权限。",
+            )}
           </p>
           {[
-            ["protectedBranches", "保护分支"],
-            ["triggerRefs", "自动构建 Ref"],
+            ["protectedBranches", t("保护分支")],
+            ["triggerRefs", t("自动构建 Ref")],
           ].map(([key, label]) => (
             <Label key={key}>
-              {label}（逗号分隔，支持 *）
+              {t(label)}
+              {t("（逗号分隔，支持 *）")}
               <FormInput
                 disabled={!maintainer}
                 value={(p[key] as string[]).join(",")}
@@ -477,13 +510,13 @@ export function ManagedRepository({ id }: { id: string }) {
             </Label>
           ))}
           {[
-            ["maxPushBytes", "单次 Push 字节上限"],
-            ["maxRepoBytes", "仓库字节上限"],
-            ["maxFileBytes", "单文件字节上限"],
-            ["maxFiles", "文件数量上限"],
+            ["maxPushBytes", t("单次 Push 字节上限")],
+            ["maxRepoBytes", t("仓库字节上限")],
+            ["maxFileBytes", t("单文件字节上限")],
+            ["maxFiles", t("文件数量上限")],
           ].map(([key, label]) => (
             <Label key={key}>
-              {label}
+              {t(label)}
               <FormInput
                 type="number"
                 disabled={!maintainer}
@@ -495,8 +528,8 @@ export function ManagedRepository({ id }: { id: string }) {
             </Label>
           ))}
           {[
-            ["denyForcePush", "禁止 Force Push"],
-            ["protectTags", "保护 Tags"],
+            ["denyForcePush", t("禁止 Force Push")],
+            ["protectTags", t("保护 Tags")],
           ].map(([key, label]) => (
             <Label key={key}>
               <FormInput
@@ -505,7 +538,7 @@ export function ManagedRepository({ id }: { id: string }) {
                 checked={p[key]}
                 onChange={(e) => setPolicy({ ...p, [key]: e.target.checked })}
               />
-              {label}
+              {t(label)}
             </Label>
           ))}
           {maintainer && (
@@ -513,7 +546,7 @@ export function ManagedRepository({ id }: { id: string }) {
               disabled={busy}
               onClick={() => act(root + "/policies", p, "PATCH")}
             >
-              保存仓库策略
+              {t("保存仓库策略")}
             </Button>
           )}
         </div>
@@ -521,13 +554,15 @@ export function ManagedRepository({ id }: { id: string }) {
       {maintainer && (
         <div className="actions">
           <Button variant="destructive" onClick={() => setDanger("delete")}>
-            软删除仓库
+            {t("软删除仓库")}
           </Button>
         </div>
       )}
       <ConfirmDialog
         open={!!danger}
-        title={danger === "delete" ? "软删除此托管仓库？" : "移除此仓库成员？"}
+        title={
+          danger === "delete" ? t("软删除此托管仓库？") : t("移除此仓库成员？")
+        }
         onClose={() => setDanger("")}
         busy={busy}
         onConfirm={async () => {
@@ -546,12 +581,16 @@ export function ManagedRepository({ id }: { id: string }) {
         }}
       >
         {danger === "delete"
-          ? "新的 Git 访问将停止。源仓库、历史快照和已发布制品会保留，名称继续保留。"
-          : "该成员的新 Git 请求将按剩余权限重新授权；现有 Token 不再授予已移除的仓库权限。"}
+          ? t(
+              "新的 Git 访问将停止。源仓库、历史快照和已发布制品会保留，名称继续保留。",
+            )
+          : t(
+              "该成员的新 Git 请求将按剩余权限重新授权；现有 Token 不再授予已移除的仓库权限。",
+            )}
       </ConfirmDialog>
       <ConfirmDialog
         open={!!revoke}
-        title="撤销 Git Token？"
+        title={t("撤销 Git Token？")}
         onClose={() => setRevoke("")}
         busy={busy}
         onConfirm={async () => {
@@ -559,7 +598,7 @@ export function ManagedRepository({ id }: { id: string }) {
           setRevoke("");
         }}
       >
-        新 Git 请求会立即被拒绝。已开始的传输最多运行至 120 秒超时。
+        {t("新 Git 请求会立即被拒绝。已开始的传输最多运行至 120 秒超时。")}
       </ConfirmDialog>
     </Card>
   );

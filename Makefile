@@ -23,6 +23,7 @@ dev:
 	./scripts/dev.sh
 
 lint:
+	node scripts/check-i18n.mjs
 	go vet ./apps/server/... ./apps/mount/... ./packages/...
 	npm run lint --prefix apps/web
 	npm run typecheck --prefix apps/web

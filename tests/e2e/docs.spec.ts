@@ -7,7 +7,7 @@ test("documentation is public, searchable and navigable with copyable examples",
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/docs");
+  await page.goto("/docs/zh");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "让 Skills 从提交走到交付",
   );
@@ -21,7 +21,7 @@ test("documentation is public, searchable and navigable with copyable examples",
     .locator("#docs-results")
     .getByRole("link", { name: /配置你的流水线/ })
     .click();
-  await expect(page).toHaveURL(/\/docs\/pipelines$/);
+  await expect(page).toHaveURL(/\/docs\/zh\/pipelines$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "配置你的流水线",
   );
@@ -59,11 +59,11 @@ test("documentation is public, searchable and navigable with copyable examples",
     "security",
     "operations",
   ]) {
-    const response = await page.goto(`/docs/${slug}`);
+    const response = await page.goto(`/docs/zh/${slug}`);
     expect(response?.status()).toBe(200);
     await expect(page.locator(".docs-prose h2").first()).toBeVisible();
   }
-  const missing = await page.goto("/docs/not-a-real-guide");
+  const missing = await page.goto("/docs/zh/not-a-real-guide");
   expect(missing?.status()).toBe(404);
   expect(errors).toEqual([]);
 });
@@ -72,12 +72,12 @@ test("documentation mobile drawer, headings and tables remain usable", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/docs");
+  await page.goto("/docs/zh");
   await page.getByRole("button", { name: "打开文档导航" }).click();
   const drawer = page.getByRole("dialog", { name: "文档导航" });
   await expect(drawer).toBeVisible();
   await drawer.getByRole("link", { name: "连接客户端与 Agent" }).click();
-  await expect(page).toHaveURL(/\/docs\/clients$/);
+  await expect(page).toHaveURL(/\/docs\/zh\/clients$/);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.locator(".docs-inline-toc summary").click();
   await page

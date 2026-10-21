@@ -25,7 +25,7 @@ export async function api<T = any>(
   if (!r.ok)
     throw new ApiError(
       r.status,
-      data.error?.message || "服务暂时不可用",
+      data.error?.message || "Service temporarily unavailable",
       data.error?.requestId,
     );
   return data;

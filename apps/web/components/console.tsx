@@ -1,4 +1,6 @@
 "use client";
+import { useI18n, translate, LanguageSwitch, type Translate } from "@/lib/i18n";
+
 import { BrandLogo } from "./brand";
 import { Skeleton as LoadingSkeleton } from "./ui/skeleton";
 import {
@@ -134,8 +136,12 @@ function useData(path: string, enabled = true) {
     refetchInterval: 30000,
   });
 }
-function date(v: any) {
-  return v ? new Date(v).toLocaleString("zh-CN", { hour12: false }) : "—";
+function date(v: any, locale: "en" | "zh") {
+  return v
+    ? new Date(v).toLocaleString(locale === "zh" ? "zh-CN" : "en", {
+        hour12: false,
+      })
+    : "—";
 }
 function short(v: any) {
   return typeof v === "string" && v.length > 24
@@ -151,6 +157,8 @@ export function Console() {
   );
 }
 function Shell() {
+  const { t, locale } = useI18n();
+
   const pathname = usePathname();
   const parts = pathname.split("/").filter(Boolean);
   const section = parts[0] || "dashboard";
@@ -216,12 +224,12 @@ function Shell() {
         </div>
         <div>
           <strong title={me.data.orgName}>
-            {me.data.orgName || "当前组织"}
+            {me.data.orgName || t("当前组织")}
           </strong>
-          <small>自部署 · 单组织</small>
+          <small>{t("自部署 · 单组织")}</small>
         </div>
       </div>
-      <div className="nav-label">组织资源</div>
+      <div className="nav-label">{t("组织资源")}</div>
       <nav>
         {links
           .filter(([key]) => key !== "audit" || permitted("auditor"))
@@ -233,15 +241,18 @@ function Shell() {
               href={"/" + key}
             >
               <Icon size={18} />
-              <span>{label}</span>
+              <span>{t(label)}</span>
               {section === key && <span className="active-dot" />}
             </Link>
           ))}
       </nav>
       <div className="sidebar-bottom">
-        <Link className="nav-item" href="/docs">
+        <Link
+          className="nav-item"
+          href={locale === "zh" ? "/docs/zh" : "/docs"}
+        >
           <BookOpen size={18} />
-          使用文档
+          {t("使用文档")}
         </Link>
         {permitted("org_admin") && (
           <Link
@@ -249,11 +260,13 @@ function Shell() {
             href="/settings/general"
           >
             <Settings size={18} />
-            组织设置
+            {t("组织设置")}
           </Link>
         )}
         <div className="system-state">
-          <span className="dot" /> 已连接控制平面 <code>v1</code>
+          <span className="dot" />
+          {t("已连接控制平面")}
+          <code>v1</code>
         </div>
         <Link className="user-card" href="/account">
           <div className="avatar">{me.data.displayName?.slice(0, 1)}</div>
@@ -273,8 +286,10 @@ function Shell() {
         <Sheet open={mobile} onOpenChange={setMobile}>
           <SheetContent side="left" className="mobile-nav-sheet">
             <SheetHeader className="sr-only">
-              <SheetTitle>工作区导航</SheetTitle>
-              <SheetDescription>选择仓库、发布或管理页面</SheetDescription>
+              <SheetTitle>{t("工作区导航")}</SheetTitle>
+              <SheetDescription>
+                {t("选择仓库、发布或管理页面")}
+              </SheetDescription>
             </SheetHeader>
             {sidebar}
           </SheetContent>
@@ -287,7 +302,7 @@ function Shell() {
           <Button
             variant="ghost"
             className="icon mobile-menu"
-            aria-label="打开导航"
+            aria-label={t("打开导航")}
             onClick={() => setMobile(true)}
           >
             <Menu size={20} />
@@ -297,12 +312,12 @@ function Shell() {
           </Link>
           <div className="breadcrumbs">
             <span className="organization-crumb" title={me.data.orgName}>
-              {me.data.orgName || "当前组织"}
+              {me.data.orgName || t("当前组织")}
             </span>
             {parts.map((p, i) => (
               <span key={i}>
                 <ChevronRight size={13} />
-                {labels[p] || short(p)}
+                {t(labels[p] || short(p))}
               </span>
             ))}
           </div>
@@ -311,7 +326,9 @@ function Shell() {
             variant="outline"
             onClick={() => setCommandOpen(true)}
           >
-            <Search size={14} /> 搜索或跳转… <kbd>⌘ K</kbd>
+            <Search size={14} />
+            {t("搜索或跳转…")}
+            <kbd>⌘ K</kbd>
           </Button>
           <form
             className="global-search"
@@ -322,17 +339,18 @@ function Shell() {
           >
             <Search size={15} />
             <FormInput
-              aria-label="全局搜索 Skills"
-              placeholder="搜索 Skills…"
+              aria-label={t("全局搜索 Skills")}
+              placeholder={t("搜索 Skills…")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <kbd>↵</kbd>
           </form>
+          <LanguageSwitch />
           <Button
             variant="ghost"
             className="icon"
-            aria-label="切换主题"
+            aria-label={t("切换主题")}
             onClick={() =>
               setTheme(
                 theme === "dark"
@@ -348,7 +366,7 @@ function Shell() {
           <Button
             variant="ghost"
             className="icon notification"
-            aria-label="通知中心"
+            aria-label={t("通知中心")}
             onClick={() => setNotify(!notify)}
           >
             <Bell size={18} />
@@ -356,7 +374,7 @@ function Shell() {
           </Button>
           {notify && (
             <Card className="notifications panel">
-              <h3>通知中心</h3>
+              <h3>{t("通知中心")}</h3>
               {notices.data?.items.length ? (
                 notices.data.items.map((n: any) => (
                   <Link
@@ -368,11 +386,11 @@ function Shell() {
                     }}
                   >
                     {n.title}
-                    <small>{date(n.createdAt)}</small>
+                    <small>{date(n.createdAt, locale)}</small>
                   </Link>
                 ))
               ) : (
-                <p className="muted">暂无通知</p>
+                <p className="muted">{t("暂无通知")}</p>
               )}
             </Card>
           )}
@@ -385,36 +403,40 @@ function Shell() {
           ) : section === "account" ? (
             <Account me={me.data} />
           ) : section === "403" ? (
-            <ErrorState error={new ApiError(403, "当前角色没有访问权限")} />
+            <ErrorState error={new ApiError(403, t("当前角色没有访问权限"))} />
           ) : section === "error" ? (
             <ErrorState
-              error={new Error("服务暂时不可用")}
+              error={new Error(t("服务暂时不可用"))}
               retry={() => router.push("/dashboard")}
             />
           ) : endpoints[section] ? (
             <Resource section={section} parts={parts} allowed={permitted} />
           ) : (
             <Empty
-              title="404 · 页面不存在"
-              description="检查地址，或返回工作区概览。"
+              title={t("404 · 页面不存在")}
+              description={t("检查地址，或返回工作区概览。")}
               href="/dashboard"
-              action="返回概览"
+              action={t("返回概览")}
             />
           )}
         </main>
         <footer>
-          SKIVA <span>不可变快照 · 可追溯发布 · 只读分发</span>
-          <span>Enterprise Skills Delivery Platform</span>
+          SKIVA <span>{t("不可变快照 · 可追溯发布 · 只读分发")}</span>
+          <span>{t("Enterprise Skills Delivery Platform")}</span>
         </footer>
       </div>
     </div>
   );
 }
-const loginSchema = z.object({
-  email: z.string().regex(/^[^\s@]+@[^\s@]+$/, "请输入有效邮箱"),
-  password: z.string().min(1, "请输入密码"),
-});
+const makeLoginSchema = (t: Translate) =>
+  z.object({
+    email: z.string().regex(/^[^\s@]+@[^\s@]+$/, t("请输入有效邮箱")),
+    password: z.string().min(1, t("请输入密码")),
+  });
 function Login() {
+  const { t } = useI18n();
+
+  const loginSchema = makeLoginSchema(t);
   const router = useRouter();
   const cache = useQueryClient();
   const form = useForm<z.infer<typeof loginSchema>>({
@@ -430,46 +452,47 @@ function Login() {
   return (
     <div className="login-page">
       <div className="login-story">
+        <LanguageSwitch />
         <div className="brand">
           <BrandLogo /> <span className="brand-light">/ console</span>
         </div>
-        <p className="eyebrow">ONE SOURCE. EVERY AGENT.</p>
+        <p className="eyebrow">{t("ONE SOURCE. EVERY AGENT.")}</p>
         <h1>
-          知识持续演进。
+          {t("知识持续演进。")}
           <br />
-          交付始终可信。
+          {t("交付始终可信。")}
         </h1>
         <p>
-          从 Git 提交到不可变发布，
+          {t("从 Git 提交到不可变发布，")}
           <br />
-          让每一个 Agent 使用正确的 Skills。
+          {t("让每一个 Agent 使用正确的 Skills。")}
         </p>
         <div className="login-flow">
           <GitBranch /> Git <ChevronRight />
           <Layers /> Snapshot <ChevronRight />
           <Terminal /> Agent
         </div>
-        <small>ENTERPRISE SKILLS DELIVERY PLATFORM</small>
+        <small>{t("ENTERPRISE SKILLS DELIVERY PLATFORM")}</small>
       </div>
       <div className="login-form">
-        <div className="eyebrow">WELCOME BACK</div>
-        <h2>登录工作区</h2>
-        <p className="muted">使用企业身份或开发环境账户继续。</p>
+        <div className="eyebrow">{t("WELCOME BACK")}</div>
+        <h2>{t("登录工作区")}</h2>
+        <p className="muted">{t("使用企业身份或开发环境账户继续。")}</p>
         <a className="btn btn-outline full" href="/api/v1/auth/oidc">
           <Shield size={17} />
-          企业 SSO 登录
+          {t("企业 SSO 登录")}
         </a>
-        <div className="divider">开发环境账户</div>
+        <div className="divider">{t("开发环境账户")}</div>
         <form onSubmit={form.handleSubmit((v) => m.mutate(v))}>
           <Label>
-            邮箱
+            {t("邮箱")}
             <FormInput autoComplete="username" {...form.register("email")} />
           </Label>
           {form.formState.errors.email && (
             <p className="danger">{form.formState.errors.email.message}</p>
           )}
           <Label>
-            密码
+            {t("密码")}
             <FormInput
               type="password"
               autoComplete="current-password"
@@ -482,12 +505,12 @@ function Login() {
             </p>
           )}
           <Button className="full" disabled={m.isPending}>
-            {m.isPending ? "正在验证…" : "登录工作区"}
+            {m.isPending ? t("正在验证…") : t("登录工作区")}
             <ArrowUpRight size={17} />
           </Button>
         </form>
         <p className="fine">
-          生产环境使用企业 OIDC。需要访问权限？请联系组织管理员。
+          {t("生产环境使用企业 OIDC。需要访问权限？请联系组织管理员。")}
         </p>
       </div>
     </div>
@@ -495,6 +518,8 @@ function Login() {
 }
 
 function QueryNotice({ queries }: { queries: any[] }) {
+  const { t } = useI18n();
+
   return (
     <>
       {queries.map((q, i) =>
@@ -502,9 +527,9 @@ function QueryNotice({ queries }: { queries: any[] }) {
           <div key={i}>
             {q.data ? (
               <div className="info-note">
-                数据可能延迟。
+                {t("数据可能延迟。")}
                 <Button variant="ghost" onClick={() => q.refetch()}>
-                  重试刷新
+                  {t("重试刷新")}
                 </Button>
               </div>
             ) : (
@@ -520,8 +545,10 @@ function QueryNotice({ queries }: { queries: any[] }) {
 }
 
 function Skeleton() {
+  const { t } = useI18n();
+
   return (
-    <div aria-label="正在加载" className="skeleton-wrap">
+    <div aria-label={t("正在加载")} className="skeleton-wrap">
       <LoadingSkeleton className="skeleton title" />
       <LoadingSkeleton className="skeleton" />
       <LoadingSkeleton className="skeleton" />
@@ -530,22 +557,27 @@ function Skeleton() {
   );
 }
 function ErrorState({ error, retry }: { error: Error; retry?: () => void }) {
+  const { t } = useI18n();
+
   return (
     <div className="error-state" role="alert">
       <Shield size={30} />
       <h2>
         {error instanceof ApiError && error.status === 403
-          ? "权限不足"
-          : "暂时无法完成请求"}
+          ? t("权限不足")
+          : t("暂时无法完成请求")}
       </h2>
-      <p>{error.message}</p>
+      <p>{t(error.message)}</p>
       {error instanceof ApiError && error.requestId && (
-        <code>Request ID: {error.requestId}</code>
+        <code>
+          {t("Request ID:")}
+          {error.requestId}
+        </code>
       )}
       {retry && (
         <Button variant="outline" onClick={retry}>
           <RefreshCw size={15} />
-          重试
+          {t("重试")}
         </Button>
       )}
     </div>
@@ -591,10 +623,12 @@ function Header({
   description?: string;
   children?: ReactNode;
 }) {
+  const { t } = useI18n();
+
   return (
     <div className="page-header">
       <div>
-        <p className="eyebrow">{kicker || "WORKSPACE / 工作空间"}</p>
+        <p className="eyebrow">{kicker || t("WORKSPACE / 工作空间")}</p>
         <h1>{title}</h1>
         {description && <p className="muted">{description}</p>}
       </div>
@@ -603,6 +637,8 @@ function Header({
   );
 }
 function Badge({ value }: { value: string }) {
+  const { t } = useI18n();
+
   return (
     <ShadBadge
       variant="outline"
@@ -620,18 +656,20 @@ function Badge({ value }: { value: string }) {
       }
     >
       <i />
-      {value}
+      {t(value)}
     </ShadBadge>
   );
 }
 function Copy({ value }: { value: string }) {
+  const { t } = useI18n();
+
   const [ok, setOK] = useState(false);
   return (
     <Button
       variant="ghost"
       size="icon-sm"
       className="icon"
-      aria-label="复制"
+      aria-label={t("复制")}
       onClick={async () => {
         await navigator.clipboard.writeText(value);
         setOK(true);
@@ -643,6 +681,8 @@ function Copy({ value }: { value: string }) {
   );
 }
 function Dashboard() {
+  const { t, locale } = useI18n();
+
   const q = useData("/dashboard");
   const pipelines = useData("/pipelines");
   const channels = useData("/channels");
@@ -651,44 +691,46 @@ function Dashboard() {
   return (
     <>
       <Header
-        title="交付概览"
+        title={t("交付概览")}
         kicker="WORKSPACE OVERVIEW"
-        description="从内容来源到 Agent 终端，每一次交付都有据可循。"
+        description={t("从内容来源到 Agent 终端，每一次交付都有据可循。")}
       >
         <Button variant="outline" onClick={() => q.refetch()}>
           <RefreshCw size={15} />
-          刷新
+          {t("刷新")}
         </Button>
         <Button asChild>
           <Link href="/repositories/new">
             <Plus size={16} />
-            接入仓库
+            {t("接入仓库")}
           </Link>
         </Button>
       </Header>
       <div className="metrics">
         {[
-          ["repositories", "Git 仓库", GitBranch, "repositories"],
-          ["skills", "已发现 Skills", BookOpen, "skills"],
-          ["releases", "不可变快照", Layers, "releases"],
-          ["clients", "授权终端", Monitor, "clients"],
+          ["repositories", t("Git 仓库"), GitBranch, "repositories"],
+          ["skills", t("已发现 Skills"), BookOpen, "skills"],
+          ["releases", t("不可变快照"), Layers, "releases"],
+          ["clients", t("授权终端"), Monitor, "clients"],
         ].map(([key, label, Icon, href]: any) => (
           <Link key={key} href={"/" + href} className="metric">
             <div>
-              <span>{label}</span>
+              <span>{t(label)}</span>
               <Icon size={18} />
             </div>
             <strong>{q.data[key]}</strong>
             <small>
-              查看详情 <ArrowUpRight size={13} />
+              {t("查看详情")}
+              <ArrowUpRight size={13} />
             </small>
           </Link>
         ))}
       </div>
       <div className="section-heading">
-        <h2>发布渠道</h2>
+        <h2>{t("发布渠道")}</h2>
         <Link href="/channels">
-          管理渠道 <ArrowUpRight size={14} />
+          {t("管理渠道")}
+          <ArrowUpRight size={14} />
         </Link>
       </div>
       <div className="channel-grid">
@@ -705,27 +747,28 @@ function Dashboard() {
             </div>
             <p className="muted">
               {c.name === "stable"
-                ? "经过验证的正式发布视图"
-                : "在小范围 Profile 中验证新版本"}
+                ? t("经过验证的正式发布视图")
+                : t("在小范围 Profile 中验证新版本")}
             </p>
             <div className="channel-info">
-              <span>SNAPSHOT</span>
+              <span>{t("SNAPSHOT")}</span>
               <Link
                 href={
                   c.snapshotId ? "/releases/" + c.snapshotId : "/releases/new"
                 }
               >
                 <code>
-                  {c.snapshotId ? short(c.snapshotId) : "等待首次发布"}
+                  {c.snapshotId ? short(c.snapshotId) : t("等待首次发布")}
                 </code>
               </Link>
-              <span>GENERATION</span>
+              <span>{t("GENERATION")}</span>
               <strong>{c.generation}</strong>
             </div>
             <div className="card-foot">
-              <span>{date(c.updatedAt)}</span>
+              <span>{date(c.updatedAt, locale)}</span>
               <Link href="/channels">
-                查看发布历史 <ChevronRight size={13} />
+                {t("查看发布历史")}
+                <ChevronRight size={13} />
               </Link>
             </div>
           </div>
@@ -733,11 +776,12 @@ function Dashboard() {
       </div>
       <div className="section-heading">
         <h2>
-          最近流水线{" "}
+          {t("最近流水线")}{" "}
           <span className="count">{pipelines.data?.items.length || 0}</span>
         </h2>
         <Link href="/pipelines">
-          全部流水线 <ArrowUpRight size={14} />
+          {t("全部流水线")}
+          <ArrowUpRight size={14} />
         </Link>
       </div>
       <Card className="panel">
@@ -749,21 +793,25 @@ function Dashboard() {
           />
         ) : (
           <Empty
-            title="从第一次提交开始"
-            description="接入 Git 仓库，平台会校验内容并生成不可变 Skill 版本。"
+            title={t("从第一次提交开始")}
+            description={t(
+              "接入 Git 仓库，平台会校验内容并生成不可变 Skill 版本。",
+            )}
             href="/repositories/new"
-            action="接入 Git 仓库"
+            action={t("接入 Git 仓库")}
           />
         )}
       </Card>
       <div className="health-strip">
         <Activity size={17} />
-        <span>需要关注</span>
+        <span>{t("需要关注")}</span>
         <Link href="/pipelines?status=failed">
-          {q.data.failedPipelines} 个失败流水线
+          {t("{count} 个失败流水线", { count: q.data.failedPipelines })}
         </Link>
-        <Link href="/clients">{q.data.offlineClients} 个离线终端</Link>
-        <span className="muted">数据每 30 秒刷新</span>
+        <Link href="/clients">
+          {t("{count} 个离线终端", { count: q.data.offlineClients })}
+        </Link>
+        <span className="muted">{t("数据每 30 秒刷新")}</span>
       </div>
     </>
   );
@@ -819,13 +867,15 @@ function Table({
   section?: string;
   onSelect?: (v: any) => void;
 }) {
+  const { t, locale } = useI18n();
+
   return (
     <div className="table-scroll">
       <ShadTable>
         <TableHeader>
           <TableRow>
             {columns.map((c) => (
-              <TableHead key={c}>{columnLabels[c] || c}</TableHead>
+              <TableHead key={c}>{t(columnLabels[c] || c)}</TableHead>
             ))}
             {(section || onSelect) && <TableHead />}
           </TableRow>
@@ -838,12 +888,12 @@ function Table({
                   {c === "status" ? (
                     <Badge value={item[c]} />
                   ) : c.endsWith("At") ? (
-                    date(item[c])
+                    date(item[c], locale)
                   ) : typeof item[c] === "boolean" ? (
                     item[c] ? (
-                      "已启用"
+                      t("已启用")
                     ) : (
-                      "已停用"
+                      t("已停用")
                     )
                   ) : Array.isArray(item[c]) ? (
                     item[c].join(", ")
@@ -881,11 +931,11 @@ function Table({
                 <TableCell>
                   {onSelect ? (
                     <Button variant="ghost" onClick={() => onSelect(item)}>
-                      管理
+                      {t("管理")}
                     </Button>
                   ) : (
                     <Link
-                      aria-label="查看详情"
+                      aria-label={t("查看详情")}
                       href={"/" + section + "/" + item.id}
                     >
                       <ChevronRight size={16} />
@@ -918,6 +968,8 @@ function Resource({
   parts: string[];
   allowed: (r: string) => boolean;
 }) {
+  const { t } = useI18n();
+
   const id = parts[1];
   if (section === "channels")
     return <Channels allowed={allowed("release_manager")} />;
@@ -931,7 +983,7 @@ function Resource({
     ) : section === "clients" ? (
       <ClientForm />
     ) : (
-      <Empty title="页面不存在" description="返回列表选择资源。" />
+      <Empty title={t("页面不存在")} description={t("返回列表选择资源。")} />
     );
   if (id)
     return <Detail section={section} id={id} parts={parts} allowed={allowed} />;
@@ -944,6 +996,8 @@ function Listing({
   section: string;
   allowed: (r: string) => boolean;
 }) {
+  const { t } = useI18n();
+
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(0);
@@ -972,13 +1026,13 @@ function Listing({
           ? allowed("agent_manager")
           : false;
   const descriptions: Record<string, string> = {
-    repositories: "管理托管与外部 Git 仓库，浏览内容、检查校验并准备发布。",
-    skills: "发现并管理经过静态校验的 Skill。所有版本均绑定完整 Commit。",
-    pipelines: "从 Git Tree 到不可变产物，追踪每一次校验和诊断。",
-    releases: "组合完整 Skill 视图，预览变更，再推进到发布渠道。",
-    profiles: "定义 Agent 可见的 Skills、发布渠道与一致性策略。",
-    clients: "管理工作负载身份、在线状态和只读挂载凭据。",
-    audit: "检索敏感操作的操作者、对象和变更记录。",
+    repositories: t("管理托管与外部 Git 仓库，浏览内容、检查校验并准备发布。"),
+    skills: t("发现并管理经过静态校验的 Skill。所有版本均绑定完整 Commit。"),
+    pipelines: t("从 Git Tree 到不可变产物，追踪每一次校验和诊断。"),
+    releases: t("组合完整 Skill 视图，预览变更，再推进到发布渠道。"),
+    profiles: t("定义 Agent 可见的 Skills、发布渠道与一致性策略。"),
+    clients: t("管理工作负载身份、在线状态和只读挂载凭据。"),
+    audit: t("检索敏感操作的操作者、对象和变更记录。"),
   };
   let items = q.data?.items || [];
   items = items.filter((v: any) =>
@@ -988,25 +1042,25 @@ function Listing({
     <>
       {section === "clients" && <AgentDeliveryOverview />}
       <Header
-        title={labels[section]}
-        kicker={"工作空间 / " + section.toUpperCase()}
+        title={t(labels[section])}
+        kicker={t("工作空间 / ") + section.toUpperCase()}
         description={descriptions[section]}
       >
         <Button variant="outline" onClick={() => q.refetch()}>
           <RefreshCw size={15} />
-          刷新
+          {t("刷新")}
         </Button>
         {create && (
           <Button asChild>
             <Link href={"/" + section + "/new"}>
               <Plus size={16} />
               {section === "repositories"
-                ? "接入仓库"
+                ? t("接入仓库")
                 : section === "releases"
-                  ? "创建快照"
+                  ? t("创建快照")
                   : section === "profiles"
-                    ? "新建 Profile"
-                    : "注册终端"}
+                    ? t("新建 Profile")
+                    : t("注册终端")}
             </Link>
           </Button>
         )}
@@ -1017,9 +1071,9 @@ function Listing({
           <div className="search-input">
             <Search size={16} />
             <FormInput
-              aria-label="筛选列表"
+              aria-label={t("筛选列表")}
               value={search}
-              placeholder="按名称、来源或标识搜索…"
+              placeholder={t("按名称、来源或标识搜索…")}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(0);
@@ -1029,11 +1083,11 @@ function Listing({
           {section === "pipelines" && (
             <NativeSelect
               wrapperClassName="filter-status"
-              aria-label="流水线状态"
+              aria-label={t("流水线状态")}
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <NativeSelectOption value="">全部状态</NativeSelectOption>
+              <NativeSelectOption value="">{t("全部状态")}</NativeSelectOption>
               {["queued", "running", "succeeded", "failed", "cancelled"].map(
                 (v) => (
                   <NativeSelectOption key={v}>{v}</NativeSelectOption>
@@ -1044,14 +1098,14 @@ function Listing({
           {(section === "pipelines" || section === "skills") && (
             <NativeSelect
               wrapperClassName="filter-repository"
-              aria-label="来源仓库筛选"
+              aria-label={t("来源仓库筛选")}
               value={filters.repoId || ""}
               onChange={(e) => {
                 setFilters({ ...filters, repoId: e.target.value });
                 setPage(0);
               }}
             >
-              <NativeSelectOption value="">全部仓库</NativeSelectOption>
+              <NativeSelectOption value="">{t("全部仓库")}</NativeSelectOption>
               {repos.data?.items.map((repo: any) => (
                 <NativeSelectOption key={repo.id} value={repo.id}>
                   {repo.name}
@@ -1059,14 +1113,16 @@ function Listing({
               ))}
             </NativeSelect>
           )}
-          <span className="muted">{items.length} 条记录</span>
+          <span className="muted">
+            {t("{count} 条记录", { count: items.length })}
+          </span>
         </div>
         {section === "audit" && (
           <div className="filterbar audit-filters">
             {[
-              ["actor", "操作者 ID"],
-              ["action", "操作"],
-              ["target", "对象 ID"],
+              ["actor", t("操作者 ID")],
+              ["action", t("操作")],
+              ["target", t("对象 ID")],
             ].map(([key, label]) => (
               <FormInput
                 key={key}
@@ -1079,8 +1135,8 @@ function Listing({
               />
             ))}
             {[
-              ["from", "开始时间"],
-              ["until", "结束时间"],
+              ["from", t("开始时间")],
+              ["until", t("结束时间")],
             ].map(([key, label]) => (
               <Label key={key}>
                 {label}
@@ -1113,49 +1169,56 @@ function Listing({
           />
         ) : (
           <Empty
-            title={search ? "没有匹配结果" : "还没有" + labels[section]}
-            description={search ? "尝试其他关键词。" : descriptions[section]}
+            title={
+              search
+                ? t("没有匹配结果")
+                : t("还没有{resource}", { resource: t(labels[section]) })
+            }
+            description={search ? t("尝试其他关键词。") : descriptions[section]}
             href={create ? "/" + section + "/new" : undefined}
-            action="开始创建"
+            action={t("开始创建")}
           />
         )}
         <div className="pagination">
-          <span>第 {page + 1} 页 · 每页 20 条</span>
+          <span>{t("第 {page} 页 · 每页 20 条", { page: page + 1 })}</span>
           <Button
             variant="ghost"
             disabled={!page}
             onClick={() => setPage(page - 1)}
           >
-            上一页
+            {t("上一页")}
           </Button>
           <Button
             variant="ghost"
             disabled={(page + 1) * 20 >= items.length}
             onClick={() => setPage(page + 1)}
           >
-            下一页
+            {t("下一页")}
           </Button>
         </div>
       </Card>
       {selected && (
         <Card className="panel detail-panel">
           <div className="section-heading">
-            <h2>审计变更 · {selected.action}</h2>
+            <h2>
+              {t("审计变更 ·")}
+              {selected.action}
+            </h2>
             <Button
               className="icon"
               onClick={() => setSelected(null)}
-              aria-label="关闭"
+              aria-label={t("关闭")}
             >
               <X size={18} />
             </Button>
           </div>
           <div className="diff-grid">
             <div>
-              <h4>Before</h4>
+              <h4>{t("Before")}</h4>
               <pre>{JSON.stringify(selected.before, null, 2)}</pre>
             </div>
             <div>
-              <h4>After</h4>
+              <h4>{t("After")}</h4>
               <pre>{JSON.stringify(selected.after, null, 2)}</pre>
             </div>
           </div>
@@ -1165,6 +1228,8 @@ function Listing({
   );
 }
 function useAction() {
+  const { t } = useI18n();
+
   const cache = useQueryClient();
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -1193,12 +1258,12 @@ function useAction() {
         {message && (
           <div className="success-note" role="status">
             <Check size={16} />
-            {message}
+            {t(message)}
           </div>
         )}
         {error && (
           <div className="error-note" role="alert">
-            {error}
+            {t(error)}
           </div>
         )}
       </>
@@ -1216,6 +1281,8 @@ function Detail({
   parts: string[];
   allowed: (r: string) => boolean;
 }) {
+  const { t, locale } = useI18n();
+
   const q = useData("/" + endpoints[section] + "/" + id);
   const versions = useData("/skills/" + id + "/versions", section === "skills");
   const a = useAction();
@@ -1231,16 +1298,16 @@ function Detail({
     <>
       <Header
         title={v.name || v.commitSha?.slice(0, 12) || short(id)}
-        kicker={labels[section] + " / DETAIL"}
+        kicker={t(labels[section]) + " / DETAIL"}
         description={v.description}
       >
         <Button variant="outline" asChild>
-          <Link href={"/" + section}>返回列表</Link>
+          <Link href={"/" + section}>{t("返回列表")}</Link>
         </Button>
         {((section === "repositories" &&
           (allowed("repo_maintainer") || v.accessRole === "maintainer")) ||
           (section === "profiles" && allowed("agent_manager"))) && (
-          <Button onClick={() => setEdit(true)}>编辑配置</Button>
+          <Button onClick={() => setEdit(true)}>{t("编辑配置")}</Button>
         )}
         {section === "repositories" &&
           (allowed("repo_maintainer") || v.accessRole === "maintainer") && (
@@ -1248,7 +1315,7 @@ function Detail({
               disabled={a.busy}
               onClick={() => a.run("/repositories/" + id + "/sync")}
             >
-              立即同步
+              {t("立即同步")}
             </Button>
           )}
         {section === "pipelines" &&
@@ -1258,7 +1325,7 @@ function Detail({
               disabled={a.busy}
               onClick={() => a.run("/pipelines/" + id + "/retry")}
             >
-              重试校验
+              {t("重试校验")}
             </Button>
           )}
       </Header>
@@ -1282,18 +1349,20 @@ function Detail({
             )
             .map(([k, val]) => (
               <div key={k}>
-                <dt>{columnLabels[k] || k}</dt>
+                <dt>{t(columnLabels[k] || k)}</dt>
                 <dd>
                   {k === "status" ? (
                     <Badge value={String(val)} />
                   ) : typeof val === "boolean" ? (
                     val ? (
-                      "是"
+                      t("是")
                     ) : (
-                      "否"
+                      t("否")
                     )
                   ) : (
-                    <span>{k.endsWith("At") ? date(val) : String(val)}</span>
+                    <span>
+                      {k.endsWith("At") ? date(val, locale) : String(val)}
+                    </span>
                   )}
                   {typeof val === "string" && val.length > 20 && (
                     <Copy value={val} />
@@ -1308,17 +1377,21 @@ function Detail({
       )}
       {section === "repositories" && v.sourceType !== "managed" && (
         <Card className="panel detail-panel">
-          <h2>Webhook 与同步</h2>
+          <h2>{t("Webhook 与同步")}</h2>
           {v.syncJobs?.map((job: any) => (
             <div className="history-row" key={job.id}>
               <Badge value={job.status} />
-              <span className="muted">{job.error || "同步任务"}</span>
-              <small>尝试 {job.attempts}</small>
+              <span className="muted">{job.error || t("同步任务")}</span>
+              <small>
+                {t("尝试")}
+                {job.attempts}
+              </small>
             </div>
           ))}
           <p className="muted">
-            选择 Git 服务提供商，配置 Push 事件与服务器 Secret
-            引用。轮询每分钟补偿遗漏事件。
+            {t(
+              "选择 Git 服务提供商，配置 Push 事件与服务器 Secret 引用。轮询每分钟补偿遗漏事件。",
+            )}
           </p>
           {["github", "gitlab", "gitea"].map((p) => (
             <div className="code-row" key={p}>
@@ -1331,8 +1404,9 @@ function Detail({
             </div>
           ))}
           <p className="fine">
-            GitHub：X-Hub-Signature-256；Gitea：X-Gitea-Signature；GitLab：X-Gitlab-Token。Secret
-            仅保存在服务器。
+            {t(
+              "GitHub：X-Hub-Signature-256；Gitea：X-Gitea-Signature；GitLab：X-Gitlab-Token。Secret 仅保存在服务器。",
+            )}
           </p>
           {allowed("repo_maintainer") && (
             <div className="actions">
@@ -1343,13 +1417,13 @@ function Detail({
                   a.run("/repositories/" + id + "/test-connection")
                 }
               >
-                测试连接
+                {t("测试连接")}
               </Button>
               <Button
                 variant="destructive"
                 onClick={() => setConfirm("delete")}
               >
-                软删除仓库
+                {t("软删除仓库")}
               </Button>
             </div>
           )}
@@ -1378,7 +1452,7 @@ function Detail({
       )}
       {section === "profiles" && (
         <Card className="panel detail-panel">
-          <h2>授权 Skills</h2>
+          <h2>{t("授权 Skills")}</h2>
           <div className="tags">
             {v.skills.map((s: string) => (
               <span className="tag" key={s}>
@@ -1386,11 +1460,13 @@ function Detail({
               </span>
             ))}
           </div>
-          <h2>只读挂载指引</h2>
+          <h2>{t("只读挂载指引")}</h2>
           <p className="muted">
             {v.consistencyMode === "pinned"
-              ? "Pinned 固定任务快照，任务期间不会自动切换。"
-              : "Dynamic 的新 open 可读取新版本；已打开句柄保持旧内容。多次 open 不保证任务级一致性。"}
+              ? t("Pinned 固定任务快照，任务期间不会自动切换。")
+              : t(
+                  "Dynamic 的新 open 可读取新版本；已打开句柄保持旧内容。多次 open 不保证任务级一致性。",
+                )}
           </p>
           <pre>
             skills-mount login --server https://YOUR_SERVER --token-file
@@ -1398,19 +1474,19 @@ function Detail({
             {v.consistencyMode} --path ~/agent-skills
           </pre>
           <p className="fine">
-            Linux FUSE 首发。macOS / Windows 尚未完成兼容验收。离线策略：
+            {t("Linux FUSE 首发。macOS / Windows 尚未完成兼容验收。离线策略：")}
             {v.offlinePolicy}。
           </p>
           <Button asChild>
-            <Link href="/clients/new">注册挂载终端</Link>
+            <Link href="/clients/new">{t("注册挂载终端")}</Link>
           </Button>
         </Card>
       )}
       {section === "clients" && (
         <Card className="panel detail-panel">
-          <h2>工作负载凭据</h2>
+          <h2>{t("工作负载凭据")}</h2>
           <p className="muted">
-            凭据仅授权此终端所属 Profile。轮换后旧凭据立即失效。
+            {t("凭据仅授权此终端所属 Profile。轮换后旧凭据立即失效。")}
           </p>
           {allowed("agent_manager") && (
             <div className="actions">
@@ -1419,19 +1495,19 @@ function Detail({
                 disabled={v.status === "revoked"}
                 onClick={() => setConfirm("rotate")}
               >
-                轮换凭据
+                {t("轮换凭据")}
               </Button>
               <Button
                 variant="destructive"
                 disabled={v.status === "revoked"}
                 onClick={() => setConfirm("revoke")}
               >
-                吊销终端
+                {t("吊销终端")}
               </Button>
             </div>
           )}
           {token && <TokenReveal token={token} close={() => setToken("")} />}
-          <h3>最近遥测</h3>
+          <h3>{t("最近遥测")}</h3>
           <pre>{JSON.stringify(v.telemetry || {}, null, 2)}</pre>
         </Card>
       )}
@@ -1439,10 +1515,10 @@ function Detail({
         open={!!confirm}
         title={
           confirm === "delete"
-            ? "软删除此仓库？"
+            ? t("软删除此仓库？")
             : confirm === "rotate"
-              ? "轮换终端凭据？"
-              : "吊销终端授权？"
+              ? t("轮换终端凭据？")
+              : t("吊销终端授权？")
         }
         busy={a.busy}
         onClose={() => setConfirm("")}
@@ -1460,7 +1536,9 @@ function Detail({
           }
         }}
       >
-        此操作会影响后续同步或客户端访问。已发布快照仍保留用于审计和回滚。
+        {t(
+          "此操作会影响后续同步或客户端访问。已发布快照仍保留用于审计和回滚。",
+        )}
       </ConfirmDialog>
     </>
   );
@@ -1480,16 +1558,20 @@ function Detail({
   return detail;
 }
 function TokenReveal({ token, close }: { token: string; close: () => void }) {
+  const { t } = useI18n();
+
   return (
     <div className="token-reveal">
-      <h3>凭据仅显示一次</h3>
-      <p>现在复制并保存到权限为 0600 的文件。请勿将令牌写入日志或仓库。</p>
+      <h3>{t("凭据仅显示一次")}</h3>
+      <p>
+        {t("现在复制并保存到权限为 0600 的文件。请勿将令牌写入日志或仓库。")}
+      </p>
       <div className="code-row">
         <code>{token}</code>
         <Copy value={token} />
       </div>
       <Button variant="outline" onClick={close}>
-        已安全保存
+        {t("已安全保存")}
       </Button>
     </div>
   );
@@ -1501,6 +1583,8 @@ function SkillVersions({
   versions: any[];
   selected?: string;
 }) {
+  const { t, locale } = useI18n();
+
   const [vid, setVid] = useState(selected || versions[0]?.id || "");
   const [file, setFile] = useState("SKILL.md");
   const [against, setAgainst] = useState("");
@@ -1516,15 +1600,15 @@ function SkillVersions({
   return (
     <Card className="panel detail-panel">
       <div className="section-heading">
-        <h2>版本与内容</h2>
+        <h2>{t("版本与内容")}</h2>
         <NativeSelect
-          aria-label="当前版本"
+          aria-label={t("当前版本")}
           value={vid}
           onChange={(e) => setVid(e.target.value)}
         >
           {versions.map((v) => (
             <NativeSelectOption key={v.id} value={v.id}>
-              {v.commitSha.slice(0, 12)} · {date(v.createdAt)}
+              {v.commitSha.slice(0, 12)} · {date(v.createdAt, locale)}
             </NativeSelectOption>
           ))}
         </NativeSelect>
@@ -1557,7 +1641,10 @@ function SkillVersions({
                 skipHtml
                 components={{
                   img: ({ alt }) => (
-                    <span className="muted">[图片：{alt || "附件"}]</span>
+                    <span className="muted">
+                      {t("[图片：")}
+                      {alt || t("附件")}]
+                    </span>
                   ),
                 }}
               >
@@ -1570,13 +1657,13 @@ function SkillVersions({
         </div>
       </div>
       <div className="section-heading">
-        <h3>比较历史版本</h3>
+        <h3>{t("比较历史版本")}</h3>
         <NativeSelect
-          aria-label="比较版本"
+          aria-label={t("比较版本")}
           value={against}
           onChange={(e) => setAgainst(e.target.value)}
         >
-          <NativeSelectOption value="">选择对比版本</NativeSelectOption>
+          <NativeSelectOption value="">{t("选择对比版本")}</NativeSelectOption>
           {versions
             .filter((v) => v.id !== vid)
             .map((v) => (
@@ -1624,6 +1711,8 @@ function FormBox({
   feedback: ReactNode;
   dirty?: boolean;
 }) {
+  const { t } = useI18n();
+
   const [changed, setChanged] = useState(false);
   useEffect(() => {
     if (!dirty || !changed) return;
@@ -1637,7 +1726,7 @@ function FormBox({
       if (
         target?.href &&
         target.href !== location.href &&
-        !window.confirm("有未保存的更改。确认离开？")
+        !window.confirm(t("有未保存的更改。确认离开？"))
       ) {
         e.preventDefault();
         e.stopImmediatePropagation();
@@ -1648,7 +1737,7 @@ function FormBox({
       window.removeEventListener("beforeunload", f);
       document.removeEventListener("click", navigate, true);
     };
-  }, [dirty, changed]);
+  }, [dirty, changed, t]);
   return (
     <>
       <Header title={title} description={description} />
@@ -1660,9 +1749,9 @@ function FormBox({
         {feedback}
         {children}
         <div className="form-footer">
-          <span className="fine">所有变更在服务端校验并记录审计。</span>
+          <span className="fine">{t("所有变更在服务端校验并记录审计。")}</span>
           <Button disabled={busy}>
-            {busy ? "正在保存…" : "保存配置"}
+            {busy ? t("正在保存…") : t("保存配置")}
             <ArrowUpRight size={15} />
           </Button>
         </div>
@@ -1671,6 +1760,8 @@ function FormBox({
   );
 }
 function RepositoryForm({ initial }: { initial?: any }) {
+  const { t } = useI18n();
+
   const feature = useData("/me");
   const a = useAction();
   const router = useRouter();
@@ -1691,14 +1782,18 @@ function RepositoryForm({ initial }: { initial?: any }) {
   );
   const managed = v.sourceType === "managed";
   const fields = [
-    ["name", "仓库名称", "例如 engineering-skills"],
+    ["name", t("仓库名称"), t("例如 engineering-skills")],
     ["remoteUrl", "Git URL", "https://git.example.com/team/skills.git"],
-    ["defaultRef", "默认分支 / Ref", "refs/heads/main"],
-    ["skillRoot", "扫描根目录", "单 Skill 根仓库留空；Monorepo 填 skills"],
-    ["credentialId", "凭据引用 ID（可选）", "组织设置中配置的凭据 ID"],
+    ["defaultRef", t("默认分支 / Ref"), "refs/heads/main"],
+    [
+      "skillRoot",
+      t("扫描根目录"),
+      t("单 Skill 根仓库留空；Monorepo 填 skills"),
+    ],
+    ["credentialId", t("凭据引用 ID（可选）"), t("组织设置中配置的凭据 ID")],
     [
       "webhookSecretRef",
-      "Webhook Secret 环境变量（可选）",
+      t("Webhook Secret 环境变量（可选）"),
       "SKIVA_WEBHOOK_SECRET",
     ],
   ].filter(
@@ -1708,8 +1803,10 @@ function RepositoryForm({ initial }: { initial?: any }) {
   );
   return (
     <FormBox
-      title={initial ? "编辑仓库" : "接入 Git 仓库"}
-      description="选择平台托管或外部 Git 来源。平台静态校验 Skills，不执行仓库内容。"
+      title={initial ? t("编辑仓库") : t("接入 Git 仓库")}
+      description={t(
+        "选择平台托管或外部 Git 来源。平台静态校验 Skills，不执行仓库内容。",
+      )}
       feedback={a.feedback}
       busy={a.busy}
       dirty
@@ -1739,9 +1836,9 @@ function RepositoryForm({ initial }: { initial?: any }) {
     >
       {!initial && (
         <Label>
-          仓库来源
+          {t("仓库来源")}
           <NativeSelect
-            aria-label="仓库来源"
+            aria-label={t("仓库来源")}
             value={v.sourceType}
             onChange={(e) => setV({ ...v, sourceType: e.target.value })}
           >
@@ -1749,11 +1846,11 @@ function RepositoryForm({ initial }: { initial?: any }) {
               value="managed"
               disabled={!feature.data?.managedGitEnabled}
             >
-              平台托管 · 直接 Clone / Push
-              {!feature.data?.managedGitEnabled ? "（尚未启用）" : ""}
+              {t("平台托管 · 直接 Clone / Push")}
+              {!feature.data?.managedGitEnabled ? t("（尚未启用）") : ""}
             </NativeSelectOption>
             <NativeSelectOption value="external">
-              外部关联 · GitHub / GitLab / Gitea
+              {t("外部关联 · GitHub / GitLab / Gitea")}
             </NativeSelectOption>
           </NativeSelect>
         </Label>
@@ -1761,7 +1858,7 @@ function RepositoryForm({ initial }: { initial?: any }) {
       {managed && !initial && (
         <>
           <Label>
-            团队命名空间
+            {t("团队命名空间")}
             <FormInput
               required
               pattern="[a-z0-9][a-z0-9-]{0,62}"
@@ -1770,7 +1867,7 @@ function RepositoryForm({ initial }: { initial?: any }) {
             />
           </Label>
           <Label>
-            仓库路径
+            {t("仓库路径")}
             <FormInput
               required
               pattern="[a-z0-9][a-z0-9-]{0,62}"
@@ -1780,9 +1877,9 @@ function RepositoryForm({ initial }: { initial?: any }) {
             />
           </Label>
           <Label>
-            初始模板
+            {t("初始模板")}
             <NativeSelect
-              aria-label="初始模板"
+              aria-label={t("初始模板")}
               value={v.template}
               onChange={(e) =>
                 setV({
@@ -1792,16 +1889,22 @@ function RepositoryForm({ initial }: { initial?: any }) {
                 })
               }
             >
-              <NativeSelectOption value="single">单 Skill</NativeSelectOption>
+              <NativeSelectOption value="single">
+                {t("单 Skill")}
+              </NativeSelectOption>
               <NativeSelectOption value="monorepo">Monorepo</NativeSelectOption>
-              <NativeSelectOption value="empty">空仓库</NativeSelectOption>
+              <NativeSelectOption value="empty">
+                {t("空仓库")}
+              </NativeSelectOption>
             </NativeSelect>
           </Label>
           <p className="info-note">
-            Clone 路径：/git/{v.namespace}/{v.slug || "仓库路径"}.git
+            {t("Clone 路径：/git/")}
+            {v.namespace}/{v.slug || t("仓库路径")}.git
             <br />
-            main 默认禁止强推和删除。创建后配置 Git Token 即可推送；Push
-            不会自动发布 Stable。
+            {t(
+              "main 默认禁止强推和删除。创建后配置 Git Token 即可推送；Push 不会自动发布 Stable。",
+            )}
           </p>
         </>
       )}
@@ -1817,25 +1920,28 @@ function RepositoryForm({ initial }: { initial?: any }) {
         </Label>
       ))}
       <Label>
-        状态
+        {t("状态")}
         <NativeSelect
           value={v.status}
           onChange={(e) => setV({ ...v, status: e.target.value })}
         >
-          <NativeSelectOption value="active">启用</NativeSelectOption>
-          <NativeSelectOption value="disabled">停用</NativeSelectOption>
+          <NativeSelectOption value="active">{t("启用")}</NativeSelectOption>
+          <NativeSelectOption value="disabled">{t("停用")}</NativeSelectOption>
         </NativeSelect>
       </Label>
       {!managed && (
         <p className="info-note">
-          私网 Git 需在服务端 SKIVA_GIT_ALLOWLIST 中明确配置主机名。Secret
-          只引用服务端环境变量。
+          {t(
+            "私网 Git 需在服务端 SKIVA_GIT_ALLOWLIST 中明确配置主机名。Secret 只引用服务端环境变量。",
+          )}
         </p>
       )}
     </FormBox>
   );
 }
 function ProfileForm({ initial }: { initial?: any }) {
+  const { t } = useI18n();
+
   const a = useAction();
   const router = useRouter();
   const channels = useData("/channels");
@@ -1855,8 +1961,8 @@ function ProfileForm({ initial }: { initial?: any }) {
   );
   return (
     <FormBox
-      title={initial ? "编辑 Agent Profile" : "新建 Agent Profile"}
-      description="明确授权视图与离线行为，为不同 Agent 分配独立配置。"
+      title={initial ? t("编辑 Agent Profile") : t("新建 Agent Profile")}
+      description={t("明确授权视图与离线行为，为不同 Agent 分配独立配置。")}
       busy={a.busy}
       feedback={
         <>
@@ -1884,7 +1990,7 @@ function ProfileForm({ initial }: { initial?: any }) {
       }}
     >
       <Label>
-        Profile 名称
+        {t("Profile 名称")}
         <FormInput
           required
           value={v.name}
@@ -1893,13 +1999,13 @@ function ProfileForm({ initial }: { initial?: any }) {
       </Label>
       <div className="form-grid">
         <Label>
-          发布渠道
+          {t("发布渠道")}
           <NativeSelect
             required
             value={v.channelId}
             onChange={(e) => setV({ ...v, channelId: e.target.value })}
           >
-            <NativeSelectOption value="">选择渠道</NativeSelectOption>
+            <NativeSelectOption value="">{t("选择渠道")}</NativeSelectOption>
             {channels.data?.items.map((c: any) => (
               <NativeSelectOption key={c.id} value={c.id}>
                 {c.name}
@@ -1908,42 +2014,44 @@ function ProfileForm({ initial }: { initial?: any }) {
           </NativeSelect>
         </Label>
         <Label>
-          一致性模式
+          {t("一致性模式")}
           <NativeSelect
             value={v.consistencyMode}
             onChange={(e) => setV({ ...v, consistencyMode: e.target.value })}
           >
             <NativeSelectOption value="dynamic">
-              Dynamic · 新打开可见更新
+              {t("Dynamic · 新打开可见更新")}
             </NativeSelectOption>
             <NativeSelectOption value="pinned">
-              Pinned · 任务固定快照
+              {t("Pinned · 任务固定快照")}
             </NativeSelectOption>
           </NativeSelect>
         </Label>
       </div>
       <Label>
-        离线策略
+        {t("离线策略")}
         <NativeSelect
           value={v.offlinePolicy}
           onChange={(e) => setV({ ...v, offlinePolicy: e.target.value })}
         >
           <NativeSelectOption value="deny_on_disconnect">
-            租约超时后拒绝读取（敏感内容）
+            {t("租约超时后拒绝读取（敏感内容）")}
           </NativeSelectOption>
           <NativeSelectOption value="allow_cached">
-            离线允许读取已验证缓存
+            {t("离线允许读取已验证缓存")}
           </NativeSelectOption>
         </NativeSelect>
       </Label>
       {v.consistencyMode === "pinned" && (
         <Label>
-          固定快照（留空使用首次挂载时的渠道快照）
+          {t("固定快照（留空使用首次挂载时的渠道快照）")}
           <NativeSelect
             value={v.pinnedSnapshotId || ""}
             onChange={(e) => setV({ ...v, pinnedSnapshotId: e.target.value })}
           >
-            <NativeSelectOption value="">首次挂载时固定</NativeSelectOption>
+            <NativeSelectOption value="">
+              {t("首次挂载时固定")}
+            </NativeSelectOption>
             {releases.data?.items.map((r: any) => (
               <NativeSelectOption key={r.id} value={r.id}>
                 {short(r.id)}
@@ -1953,9 +2061,9 @@ function ProfileForm({ initial }: { initial?: any }) {
         </Label>
       )}
       <Label>
-        授权 Skills
+        {t("授权 Skills")}
         <FormInput
-          placeholder="搜索 Skills"
+          placeholder={t("搜索 Skills")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -1989,24 +2097,27 @@ function ProfileForm({ initial }: { initial?: any }) {
           checked={v.enabled}
           onChange={(e) => setV({ ...v, enabled: e.target.checked })}
         />
-        启用此 Profile
+        {t("启用此 Profile")}
       </Label>
       <p className="info-note">
-        allow_cached 无法同时保证断网期间即时撤权。dynamic 不保证跨多次 open
-        的任务级一致性。
+        {t(
+          "allow_cached 无法同时保证断网期间即时撤权。dynamic 不保证跨多次 open 的任务级一致性。",
+        )}
       </p>
     </FormBox>
   );
 }
 function ClientForm() {
+  const { t } = useI18n();
+
   const p = useData("/agent-profiles");
   const [v, setV] = useState({ name: "", profileId: "" });
   const [token, setToken] = useState("");
   const a = useAction();
   return (
     <FormBox
-      title="注册挂载终端"
-      description="为每个终端签发独立、限定 Profile 的工作负载凭据。"
+      title={t("注册挂载终端")}
+      description={t("为每个终端签发独立、限定 Profile 的工作负载凭据。")}
       busy={a.busy}
       feedback={
         <>
@@ -2021,7 +2132,7 @@ function ClientForm() {
       }}
     >
       <Label>
-        终端名称
+        {t("终端名称")}
         <FormInput
           required
           value={v.name}
@@ -2029,13 +2140,13 @@ function ClientForm() {
         />
       </Label>
       <Label>
-        所属 Profile
+        {t("所属 Profile")}
         <NativeSelect
           required
           value={v.profileId}
           onChange={(e) => setV({ ...v, profileId: e.target.value })}
         >
-          <NativeSelectOption value="">选择 Profile</NativeSelectOption>
+          <NativeSelectOption value="">{t("选择 Profile")}</NativeSelectOption>
           {p.data?.items
             .filter((p: any) => p.enabled)
             .map((p: any) => (
@@ -2050,6 +2161,8 @@ function ClientForm() {
   );
 }
 function ReleaseForm() {
+  const { t } = useI18n();
+
   const skills = useData("/skills");
   const channels = useData("/channels");
   const stableId = channels.data?.items.find(
@@ -2096,9 +2209,11 @@ function ReleaseForm() {
   return (
     <ReleaseSheet>
       <Header
-        title="创建发布快照"
+        title={t("创建发布快照")}
         kicker="RELEASE / COMPOSE"
-        description="选择完整的 Skill 版本集合。创建快照后，再选择 Canary 或 Stable 渠道推进。"
+        description={t(
+          "选择完整的 Skill 版本集合。创建快照后，再选择 Canary 或 Stable 渠道推进。",
+        )}
       />
       <Card className="panel detail-panel">
         {a.feedback}
@@ -2106,32 +2221,35 @@ function ReleaseForm() {
           queries={[skills, channels, ...(stableId ? [baseline] : [])]}
         />
         <div className="release-baseline">
-          <strong>完整集合基线</strong>
+          <strong>{t("完整集合基线")}</strong>
           <code>
             {stableId
               ? "Stable · " + stableId.slice(0, 12)
-              : "首次发布 · 空集合"}
+              : t("首次发布 · 空集合")}
           </code>
           <p className="fine">
-            默认继承 Stable 中所有 Skills，替换版本后重新预览。
+            {t("默认继承 Stable 中所有 Skills，替换版本后重新预览。")}
           </p>
         </div>
         {removed.length > 0 && (
           <div className="diagnostic bad" role="alert">
-            将从完整集合移除：{removed.map((v: any) => v.name).join("、")}
+            {t("将从完整集合移除：")}
+            {removed.map((v: any) => v.name).join("、")}
           </div>
         )}
         <div className="filterbar">
           <div className="search-input">
             <Search size={16} />
             <FormInput
-              placeholder="搜索 Skills"
-              aria-label="搜索候选 Skills"
+              placeholder={t("搜索 Skills")}
+              aria-label={t("搜索候选 Skills")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <span>{body.versionIds.length} 个版本已选</span>
+          <span>
+            {t("已选择 {count} 个版本", { count: body.versionIds.length })}
+          </span>
         </div>
         {Object.entries(selected)
           .filter(([key, value]) => key.startsWith("inherited:") && value)
@@ -2140,7 +2258,8 @@ function ReleaseForm() {
               <div>
                 <strong>{key.slice(10)}</strong>
                 <p className="fine">
-                  从 Stable 继承 · 来源仓库当前不可见 · {value}
+                  {t("从 Stable 继承 · 来源仓库当前不可见 ·")}
+                  {value}
                 </p>
               </div>
               <Button
@@ -2150,7 +2269,7 @@ function ReleaseForm() {
                   setPreview(null);
                 }}
               >
-                从本次快照移除
+                {t("从本次快照移除")}
               </Button>
             </div>
           ))}
@@ -2170,23 +2289,25 @@ function ReleaseForm() {
           ))}
         {skills.data?.items.length === 0 && (
           <Empty
-            title="还没有可发布版本"
-            description="接入仓库并完成一次成功的校验后，版本将出现在这里。"
+            title={t("还没有可发布版本")}
+            description={t(
+              "接入仓库并完成一次成功的校验后，版本将出现在这里。",
+            )}
             href="/repositories/new"
-            action="接入仓库"
+            action={t("接入仓库")}
           />
         )}
         {initialized && skills.data?.items.length > 0 && (
           <section className="composer-review">
             <div className="section-heading">
-              <h3>审阅版本差异</h3>
+              <h3>{t("审阅版本差异")}</h3>
               <NativeSelect
-                aria-label="审阅 Skill"
+                aria-label={t("审阅 Skill")}
                 value={reviewSkill}
                 onChange={(e) => setReviewSkill(e.target.value)}
               >
                 <NativeSelectOption value="">
-                  选择要审阅的 Skill
+                  {t("选择要审阅的 Skill")}
                 </NativeSelectOption>
                 {skills.data.items.map((s: any) => (
                   <NativeSelectOption key={s.id} value={s.id}>
@@ -2219,7 +2340,7 @@ function ReleaseForm() {
               setPreview(null);
             }}
           />
-          我已审阅所选版本的安全诊断并接受脚本内容风险。
+          {t("我已审阅所选版本的安全诊断并接受脚本内容风险。")}
         </Label>
         <div className="actions">
           <Button
@@ -2230,24 +2351,27 @@ function ReleaseForm() {
               if (out) setPreview(out);
             }}
           >
-            预览完整视图
+            {t("预览完整视图")}
           </Button>
           <Button
             disabled={!preview || a.busy}
             onClick={() => setConfirm(true)}
           >
-            创建不可变快照
+            {t("创建不可变快照")}
           </Button>
         </div>
       </Card>
       {preview && (
         <Card className="panel detail-panel">
-          <h2>发布预览</h2>
+          <h2>{t("发布预览")}</h2>
           <p>
-            {preview.files.length} 个文件 · {preview.items.length} 个 Skill
+            {t("{files} 个文件 · {skills} 个 Skill", {
+              files: preview.files.length,
+              skills: preview.items.length,
+            })}
           </p>
           <Table items={preview.items} columns={["name", "versionId"]} />
-          <h3>关联 Profiles</h3>
+          <h3>{t("关联 Profiles")}</h3>
           <div className="tags">
             {preview.affectedProfiles.map((p: any) => (
               <Link key={p.id} className="tag" href={"/profiles/" + p.id}>
@@ -2256,13 +2380,13 @@ function ReleaseForm() {
             ))}
           </div>
           <p className="fine">
-            创建快照本身不会修改渠道。渠道推进时会原子更新 generation。
+            {t("创建快照本身不会修改渠道。渠道推进时会原子更新 generation。")}
           </p>
         </Card>
       )}
       <ConfirmDialog
         open={confirm}
-        title="创建此不可变快照？"
+        title={t("创建此不可变快照？")}
         busy={a.busy}
         onClose={() => setConfirm(false)}
         onConfirm={async () => {
@@ -2270,7 +2394,7 @@ function ReleaseForm() {
           if (out) router.push("/releases/" + out.id);
         }}
       >
-        确认所选版本组成完整发布视图，且已审阅全部安全风险。
+        {t("确认所选版本组成完整发布视图，且已审阅全部安全风险。")}
       </ConfirmDialog>
     </ReleaseSheet>
   );
@@ -2286,6 +2410,8 @@ function ReleaseChoice({
   value: string;
   onChange: (v: string) => void;
 }) {
+  const { t, locale } = useI18n();
+
   const versions = useData("/skills/" + skill.id + "/versions");
   return (
     <div className="release-choice">
@@ -2307,14 +2433,14 @@ function ReleaseChoice({
       </Label>
       <NativeSelect
         disabled={disabled}
-        aria-label={skill.name + "版本"}
+        aria-label={skill.name + t("版本")}
         value={value}
         onChange={(e) => onChange(e.target.value)}
       >
-        <NativeSelectOption value="">未选择</NativeSelectOption>
+        <NativeSelectOption value="">{t("未选择")}</NativeSelectOption>
         {versions.data?.items.map((v: any) => (
           <NativeSelectOption key={v.id} value={v.id}>
-            {v.commitSha.slice(0, 12)} · {date(v.createdAt)}
+            {v.commitSha.slice(0, 12)} · {date(v.createdAt, locale)}
           </NativeSelectOption>
         ))}
       </NativeSelect>
@@ -2328,6 +2454,8 @@ function Channels({
   allowed: boolean;
   initialSnapshot?: string;
 }) {
+  const { t, locale } = useI18n();
+
   const q = useData("/channels");
   const releases = useData("/releases");
   const [target, setTarget] = useState<Record<string, string>>({});
@@ -2337,9 +2465,11 @@ function Channels({
   return (
     <>
       <Header
-        title="发布渠道"
+        title={t("发布渠道")}
         kicker="DELIVERY / CHANNELS"
-        description="使用同一快照从 Canary 提升到 Stable。回滚仅切换指针，不重新构建。"
+        description={t(
+          "使用同一快照从 Canary 提升到 Stable。回滚仅切换指针，不重新构建。",
+        )}
       />
       {a.feedback}
       {q.isPending ? (
@@ -2354,15 +2484,18 @@ function Channels({
                 <h2>{c.name}</h2>
                 <Badge value={c.snapshotId ? "published" : "empty"} />
               </div>
-              <p className="fine">GENERATION {c.generation}</p>
+              <p className="fine">
+                {t("GENERATION")}
+                {c.generation}
+              </p>
               <div className="code-row">
-                <code>{c.snapshotId || "尚未发布"}</code>
+                <code>{c.snapshotId || t("尚未发布")}</code>
                 {c.snapshotId && <Copy value={c.snapshotId} />}
               </div>
               {allowed && (
                 <>
                   <Label>
-                    目标快照
+                    {t("目标快照")}
                     <NativeSelect
                       value={target[c.id] ?? initialSnapshot}
                       onChange={(e) =>
@@ -2370,7 +2503,7 @@ function Channels({
                       }
                     >
                       <NativeSelectOption value="">
-                        选择已验证快照
+                        {t("选择已验证快照")}
                       </NativeSelectOption>
                       {releases.data?.items.map((s: any) => (
                         <NativeSelectOption value={s.id} key={s.id}>
@@ -2389,11 +2522,12 @@ function Channels({
                       })
                     }
                   >
-                    预览并推进 <ArrowUpRight size={15} />
+                    {t("预览并推进")}
+                    <ArrowUpRight size={15} />
                   </Button>
                 </>
               )}
-              <h3>发布历史</h3>
+              <h3>{t("发布历史")}</h3>
               {c.history.length ? (
                 c.history.map((h: any) => (
                   <div className="history-row" key={h.id}>
@@ -2403,7 +2537,7 @@ function Channels({
                       </Link>
                       <p>{h.reason}</p>
                       <small>
-                        {date(h.createdAt)} · generation {h.generation}
+                        {date(h.createdAt, locale)} · generation {h.generation}
                       </small>
                     </div>
                     {allowed && h.snapshotId !== c.snapshotId && (
@@ -2418,14 +2552,14 @@ function Channels({
                         }
                       >
                         <ArrowDownLeft size={14} />
-                        回滚
+                        {t("回滚")}
                       </Button>
                     )}
                   </div>
                 ))
               ) : (
                 <p className="muted">
-                  发布后将在这里记录操作者、原因和历史快照。
+                  {t("发布后将在这里记录操作者、原因和历史快照。")}
                 </p>
               )}
             </Card>
@@ -2437,8 +2571,8 @@ function Channels({
           open
           title={
             action.type === "rollback"
-              ? "回滚 " + action.channel.name
-              : "推进 " + action.channel.name
+              ? t("回滚 ") + action.channel.name
+              : t("推进 ") + action.channel.name
           }
           busy={a.busy}
           onClose={() => {
@@ -2466,11 +2600,11 @@ function Channels({
             next={action.snapshotId}
           />
           <Label>
-            变更原因（必填）
+            {t("变更原因（必填）")}
             <Textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="说明验证结果或回滚原因"
+              placeholder={t("说明验证结果或回滚原因")}
               required
             />
           </Label>
@@ -2486,6 +2620,8 @@ function ChannelComparison({
   current: string;
   next: string;
 }) {
+  const { t } = useI18n();
+
   const before = useData("/releases/" + current, !!current);
   const after = useData("/releases/" + next);
   if (after.isPending || (current && before.isPending)) return <Skeleton />;
@@ -2506,7 +2642,10 @@ function ChannelComparison({
   return (
     <div>
       <p>
-        当前 {short(current)} → 目标 {short(next)}
+        {t("当前")}
+        {short(current)}
+        {t("→ 目标")}
+        {short(next)}
       </p>
       <div className="change-preview">
         {changes.map((c: any) => (
@@ -2517,12 +2656,14 @@ function ChannelComparison({
         ))}
       </div>
       <p className="fine">
-        目标将替换此渠道的完整视图，影响所有绑定此渠道的动态 Profile。
+        {t("目标将替换此渠道的完整视图，影响所有绑定此渠道的动态 Profile。")}
       </p>
     </div>
   );
 }
 function SettingsPage({ tab }: { tab: string }) {
+  const { t, locale } = useI18n();
+
   const q = useData("/settings");
   const members = useData("/members", tab === "members");
   const credentials = useData("/credentials", tab === "credentials");
@@ -2532,8 +2673,8 @@ function SettingsPage({ tab }: { tab: string }) {
   return (
     <>
       <Header
-        title="组织设置"
-        description="集中管理成员权限、身份提供商与服务端凭据引用。"
+        title={t("组织设置")}
+        description={t("集中管理成员权限、身份提供商与服务端凭据引用。")}
       />
       <div className="tabs">
         {["general", "members", "credentials", "security"].map((t) => (
@@ -2542,7 +2683,7 @@ function SettingsPage({ tab }: { tab: string }) {
             key={t}
             href={"/settings/" + t}
           >
-            {labels[t]}
+            {translate(locale, labels[t])}
           </Link>
         ))}
       </div>
@@ -2568,9 +2709,9 @@ function SettingsPage({ tab }: { tab: string }) {
             );
           }}
         >
-          <h2>{labels[tab]}</h2>
+          <h2>{t(labels[tab])}</h2>
           <Label>
-            组织名称
+            {t("组织名称")}
             <FormInput
               required
               value={v.name ?? q.data.name}
@@ -2582,30 +2723,31 @@ function SettingsPage({ tab }: { tab: string }) {
               <dt>OIDC</dt>
               <dd>
                 {q.data.oidcConfigured
-                  ? "已配置"
-                  : "未配置 · 通过服务器环境变量配置"}
+                  ? t("已配置")
+                  : t("未配置 · 通过服务器环境变量配置")}
               </dd>
             </div>
             <div>
-              <dt>环境</dt>
+              <dt>{t("环境")}</dt>
               <dd>
                 {q.data.production
-                  ? "Production · 强制 SSO"
-                  : "Development · 本地账号可用"}
+                  ? t("Production · 强制 SSO")
+                  : t("Development · 本地账号可用")}
               </dd>
             </div>
           </div>
           <p className="info-note">
-            OIDC 使用 Authorization Code + PKCE。离线策略在每个 Profile
-            中显式配置；Git 网络允许列表由服务器环境管理。
+            {t(
+              "OIDC 使用 Authorization Code + PKCE。离线策略在每个 Profile 中显式配置；Git 网络允许列表由服务器环境管理。",
+            )}
           </p>
           {tab === "security" && (
             <>
-              <h3>静态校验阈值</h3>
+              <h3>{t("静态校验阈值")}</h3>
               {[
-                ["maxFileBytes", "单文件字节上限", 8388608],
-                ["maxTotalBytes", "仓库总字节上限", 67108864],
-                ["maxFiles", "最大文件数量", 10000],
+                ["maxFileBytes", t("单文件字节上限"), 8388608],
+                ["maxTotalBytes", t("仓库总字节上限"), 67108864],
+                ["maxFiles", t("最大文件数量"), 10000],
               ].map(([k, label, defaultValue]) => (
                 <Label key={String(k)}>
                   {label}
@@ -2628,8 +2770,8 @@ function SettingsPage({ tab }: { tab: string }) {
                 </Label>
               ))}
               {[
-                ["blockScripts", "禁止分发脚本文件"],
-                ["blockExternalLinks", "禁止 Markdown 外链"],
+                ["blockScripts", t("禁止分发脚本文件")],
+                ["blockExternalLinks", t("禁止 Markdown 外链")],
               ].map(([k, label]) => (
                 <Label className="check-row" key={k}>
                   <FormInput
@@ -2650,12 +2792,12 @@ function SettingsPage({ tab }: { tab: string }) {
               ))}
             </>
           )}
-          <Button disabled={a.busy}>保存组织设置</Button>
+          <Button disabled={a.busy}>{t("保存组织设置")}</Button>
         </form>
       ) : tab === "members" ? (
         <Card className="panel detail-panel">
           <div className="section-heading">
-            <h2>成员与角色</h2>
+            <h2>{t("成员与角色")}</h2>
             <Button
               onClick={() => {
                 setEdit({ kind: "member" });
@@ -2668,7 +2810,7 @@ function SettingsPage({ tab }: { tab: string }) {
               }}
             >
               <Plus size={15} />
-              添加成员
+              {t("添加成员")}
             </Button>
           </div>
           {members.data && (
@@ -2685,14 +2827,14 @@ function SettingsPage({ tab }: { tab: string }) {
       ) : tab === "credentials" ? (
         <Card className="panel detail-panel">
           <div className="section-heading">
-            <h2>服务端 Secret 引用</h2>
+            <h2>{t("服务端 Secret 引用")}</h2>
             <Button
               onClick={() => {
                 setEdit({ kind: "credential" });
                 setV({ name: "", secretRef: "" });
               }}
             >
-              新增引用
+              {t("新增引用")}
             </Button>
           </div>
           {credentials.data && (
@@ -2706,35 +2848,40 @@ function SettingsPage({ tab }: { tab: string }) {
             />
           )}
           <p className="fine">
-            这里只保存引用，不保存或显示 Secret 明文。轮换服务器 Secret
-            后，可更新引用名称。
+            {t(
+              "这里只保存引用，不保存或显示 Secret 明文。轮换服务器 Secret 后，可更新引用名称。",
+            )}
           </p>
         </Card>
       ) : (
-        <Empty title="设置页面不存在" description="请选择上方设置分类。" />
+        <Empty
+          title={t("设置页面不存在")}
+          description={t("请选择上方设置分类。")}
+        />
       )}
       {edit && (
         <Dialog open onOpenChange={(open) => !open && setEdit(null)}>
           <DialogContent className="member-dialog">
             <DialogHeader>
               <div className="member-dialog-eyebrow">
-                <Shield size={13} /> 组织管理
+                <Shield size={13} />
+                {t("组织管理")}
               </div>
               <DialogTitle>
                 {edit.kind === "member"
-                  ? "添加组织成员"
+                  ? t("添加组织成员")
                   : edit.kind === "roles"
-                    ? "管理成员权限"
+                    ? t("管理成员权限")
                     : edit.id
-                      ? "编辑凭据引用"
-                      : "添加凭据引用"}
+                      ? t("编辑凭据引用")
+                      : t("添加凭据引用")}
               </DialogTitle>
               <DialogDescription>
                 {edit.kind === "credential"
-                  ? "关联服务器上的 Secret，平台只保存引用名称。"
+                  ? t("关联服务器上的 Secret，平台只保存引用名称。")
                   : edit.kind === "member"
-                    ? "填写成员信息，并分配其在组织中的职责。"
-                    : "调整角色与账户状态，保存后生效。"}
+                    ? t("填写成员信息，并分配其在组织中的职责。")
+                    : t("调整角色与账户状态，保存后生效。")}
               </DialogDescription>
             </DialogHeader>
             <form
@@ -2769,14 +2916,14 @@ function SettingsPage({ tab }: { tab: string }) {
                 {edit.kind === "credential" ? (
                   <>
                     <Label>
-                      引用名称
+                      {t("引用名称")}
                       <FormInput
                         value={v.name}
                         onChange={(e) => setV({ ...v, name: e.target.value })}
                       />
                     </Label>
                     <Label>
-                      环境变量名
+                      {t("环境变量名")}
                       <FormInput
                         value={v.secretRef}
                         onChange={(e) =>
@@ -2796,7 +2943,7 @@ function SettingsPage({ tab }: { tab: string }) {
                             setV({ ...v, active: e.target.checked })
                           }
                         />
-                        启用账户
+                        {t("启用账户")}
                       </Label>
                     )}
                     {edit.kind === "member" && (
@@ -2805,20 +2952,20 @@ function SettingsPage({ tab }: { tab: string }) {
                           {[
                             {
                               key: "email",
-                              label: "邮箱",
+                              label: t("邮箱"),
                               placeholder: "name@company.com",
                               type: "email",
                             },
                             {
                               key: "displayName",
-                              label: "显示名称",
-                              placeholder: "成员姓名",
+                              label: t("显示名称"),
+                              placeholder: t("成员姓名"),
                               type: "text",
                             },
                             {
                               key: "password",
-                              label: "初始密码",
-                              placeholder: "至少 14 个字符",
+                              label: t("初始密码"),
+                              placeholder: t("至少 14 个字符"),
                               type: "password",
                             },
                           ].map(({ key: k, label, placeholder, type }) => (
@@ -2846,38 +2993,43 @@ function SettingsPage({ tab }: { tab: string }) {
                           ))}
                         </div>
                         <p className="member-field-hint">
-                          初始密码用于本地登录；企业 SSO
-                          通过已验证的邮箱匹配成员身份。
+                          {t(
+                            "初始密码用于本地登录；企业 SSO 通过已验证的邮箱匹配成员身份。",
+                          )}
                         </p>
                       </>
                     )}
                     <div className="member-role-heading">
-                      <h3>角色与权限</h3>
-                      <span>可多选 · 已选 {v.roles?.length || 0} 项</span>
+                      <h3>{t("角色与权限")}</h3>
+                      <span>
+                        {t("可多选 · 已选 {count} 项", {
+                          count: v.roles?.length || 0,
+                        })}
+                      </span>
                     </div>
                     <div className="member-roles">
                       {[
                         [
                           "org_admin",
-                          "组织管理员",
-                          "管理全部资源、成员与组织设置",
+                          t("组织管理员"),
+                          t("管理全部资源、成员与组织设置"),
                         ],
                         [
                           "repo_maintainer",
-                          "仓库维护者",
-                          "维护仓库配置、同步内容与重试校验",
+                          t("仓库维护者"),
+                          t("维护仓库配置、同步内容与重试校验"),
                         ],
                         [
                           "release_manager",
-                          "发布管理员",
-                          "创建发布快照，推进或回滚渠道",
+                          t("发布管理员"),
+                          t("创建发布快照，推进或回滚渠道"),
                         ],
                         [
                           "agent_manager",
-                          "Agent 管理员",
-                          "管理 Profiles、终端及访问凭据",
+                          t("Agent 管理员"),
+                          t("管理 Profiles、终端及访问凭据"),
                         ],
-                        ["auditor", "审计员", "查看审计日志与变更记录"],
+                        ["auditor", t("审计员"), t("查看审计日志与变更记录")],
                       ].map(([role, name, description]) => (
                         <Label
                           className={
@@ -2904,7 +3056,9 @@ function SettingsPage({ tab }: { tab: string }) {
                             <small>{description}</small>
                           </span>
                           {role === "org_admin" && (
-                            <ShadBadge variant="outline">全部权限</ShadBadge>
+                            <ShadBadge variant="outline">
+                              {t("全部权限")}
+                            </ShadBadge>
                           )}
                         </Label>
                       ))}
@@ -2918,7 +3072,7 @@ function SettingsPage({ tab }: { tab: string }) {
                   variant="outline"
                   onClick={() => setEdit(null)}
                 >
-                  取消
+                  {t("取消")}
                 </Button>
                 <Button
                   type="submit"
@@ -2927,10 +3081,10 @@ function SettingsPage({ tab }: { tab: string }) {
                   }
                 >
                   {a.busy
-                    ? "正在保存…"
+                    ? t("正在保存…")
                     : edit.kind === "member"
-                      ? "添加成员"
-                      : "保存更改"}
+                      ? t("添加成员")
+                      : t("保存更改")}
                 </Button>
               </DialogFooter>
             </form>
@@ -2941,12 +3095,17 @@ function SettingsPage({ tab }: { tab: string }) {
   );
 }
 function Account({ me }: { me: any }) {
+  const { t } = useI18n();
+
   const a = useAction();
   const [name, setName] = useState(me.displayName);
   const router = useRouter();
   return (
     <>
-      <Header title="个人账户" description="查看组织身份、权限与当前会话。" />
+      <Header
+        title={t("个人账户")}
+        description={t("查看组织身份、权限与当前会话。")}
+      />
       <form
         className="panel form-panel"
         onSubmit={(e) => {
@@ -2956,7 +3115,7 @@ function Account({ me }: { me: any }) {
       >
         {a.feedback}
         <Label>
-          显示名称
+          {t("显示名称")}
           <FormInput
             required
             value={name}
@@ -2964,7 +3123,7 @@ function Account({ me }: { me: any }) {
           />
         </Label>
         <Label>
-          邮箱
+          {t("邮箱")}
           <FormInput disabled value={me.email} />
         </Label>
         <div className="tags">
@@ -2975,13 +3134,13 @@ function Account({ me }: { me: any }) {
           ))}
         </div>
         <div className="actions">
-          <Button disabled={a.busy}>保存资料</Button>
+          <Button disabled={a.busy}>{t("保存资料")}</Button>
           <Button
             type="button"
             variant="outline"
             onClick={() => a.run("/auth/refresh")}
           >
-            续期会话
+            {t("续期会话")}
           </Button>
           <Button
             type="button"
@@ -2992,7 +3151,7 @@ function Account({ me }: { me: any }) {
             }}
           >
             <LogOut size={15} />
-            登出
+            {t("登出")}
           </Button>
         </div>
       </form>

@@ -14,7 +14,7 @@ COPY --from=build /server /usr/local/bin/skiva-server
 COPY --from=build /maintenance /usr/local/bin/skiva-maintenance
 COPY --from=build /go/bin/goose /usr/local/bin/goose
 COPY migrations /migrations
-COPY LICENSE NOTICE LICENSE-FAQ.md THIRD_PARTY_NOTICES.md /usr/share/licenses/skiva/
+COPY LICENSE NOTICE LICENSE-FAQ.md LICENSE-FAQ.zh-CN.md THIRD_PARTY_NOTICES.md THIRD_PARTY_NOTICES.zh-CN.md /usr/share/licenses/skiva/
 USER 10001
 WORKDIR /data
 EXPOSE 8080

@@ -22,6 +22,7 @@ rmSync(stage, { recursive: true, force: true });
 mkdirSync(join(stage, "app"), { recursive: true });
 for (const entry of [
   "content",
+  "lib/i18n",
   "public",
   "app/favicon.ico",
   "app/icon.svg",
@@ -53,14 +54,14 @@ writeFileSync(
   join(stage, "app/page.tsx"),
   `import { Documentation } from "@/components/documentation";
 import "./docs/docs.css";
-export const metadata = { title: "Skiva · Skills 发布与交付文档" };
+export const metadata = { title: "Skiva · Skills management and delivery" };
 export default function Page() { return <Documentation slug="" />; }
 `,
 );
 writeFileSync(
   join(stage, "app/not-found.tsx"),
   `import Link from "next/link";
-export default function NotFound() { return <main className="standalone"><p>404</p><h1>文档不存在</h1><Link href="/docs">返回文档首页</Link></main>; }
+export default function NotFound() { return <main className="standalone"><p>404</p><h1>Page not found / 文档不存在</h1><Link href="/docs">Documentation / 文档首页</Link></main>; }
 `,
 );
 writeFileSync(

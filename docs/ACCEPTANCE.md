@@ -1,5 +1,7 @@
 # Acceptance evidence
 
+English · [简体中文](ACCEPTANCE.zh-CN.md)
+
 Evidence is produced from the delivered source. Test mocks are used only for transport faults/identity-provider controls and are not presented as production features. The demo Registry was created through a real local HTTPS Git repository and worker.
 
 ## Environment

@@ -1,15 +1,17 @@
 # Deployment and operations
 
+English · [简体中文](OPERATIONS.zh-CN.md)
+
 ## Installation
 
 1. Use Node 24, Git and the Go 1.26.10 toolchain. `make deps` downloads locked dependencies.
 2. Copy `.env.example` to `.env.local`, mode 0600, choose a unique administrator bootstrap password (14+ characters), database URL and Web origin. `SKIVA_ORG_ID` optionally selects the single deployment organization; keep it stable across upgrades.
 3. `make db` starts the local PostgreSQL container. `make migrate-up` applies goose migrations. If using an alternate database, pass `DATABASE_URL=...`; `scripts/dev.sh` loads `.env.local` before calling Make.
-4. `make dev` runs the Go API/worker and Next.js. `SKIVA_WEB_PORT` must agree with `SKIVA_WEB_ORIGIN`. Current workspace preview uses port 3001 because 3000 was already in use by another project.
+4. `make dev` runs the Go API/worker and Next.js. `SKIVA_WEB_PORT` must agree with `SKIVA_WEB_ORIGIN`.
 5. `docker compose -f deployments/compose.yaml --profile full up --build -d` is the packaged deployment path. Apply migrations before starting server, preserve Postgres and artifact volumes, and set credentials explicitly. The API refuses an absent/short bootstrap password.
 6. Use `deployments/Caddyfile` as a TLS reverse-proxy template. `/distribution/*` goes directly to Go, not through Next.js. Restrict `/metrics` to the monitoring network. Set production mode and the exact external HTTPS Web origin.
 
-The local database `skiva_local` contains the working demonstration; `skiva_test` is dedicated to integration tests. The initial development database `skiva` contains historical test fixtures and must not be used as deployment data.
+Use separate databases for development, integration tests, and production; never reuse test fixtures as deployment data.
 
 ## OIDC and RBAC
 
@@ -77,7 +79,7 @@ SKIVA_RESTORE_DATA_DIR=/srv/skiva-restored \
 ./scripts/restore.sh /secure/backups/TIMESTAMP
 ```
 
-The script verifies checksums, restores DB and data, then verifies every version→Blob digest and size. Only switch service configuration after this succeeds and channel/profile inspection matches the expected state. The workspace rehearsal restored `skiva_local` to `skiva_restore` and verified all referenced objects.
+The script verifies checksums, restores DB and data, then verifies every version→Blob digest and size. Only switch service configuration after this succeeds and channel/profile inspection matches the expected state.
 
 ## Retention and audit export
 

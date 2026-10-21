@@ -1,5 +1,7 @@
 # Third-party notices
 
+English · [简体中文](THIRD_PARTY_NOTICES.zh-CN.md)
+
 The root LICENSE governs Skiva-owned material only. Third-party software and
 source excerpts remain subject to their respective licenses. This file does
 not replace notices in dependencies or container base images and is not a
