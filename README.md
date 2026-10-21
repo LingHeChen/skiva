@@ -5,99 +5,128 @@
   </picture>
 </p>
 
-# Skiva
+<p align="center">基于 Git 的 Skills 管理、发布与 Agent 交付平台</p>
 
-Git-backed Skills Delivery Platform。
+<p align="center">
+  <a href="https://linghechen.github.io/skiva/">在线文档</a> ·
+  <a href="https://linghechen.github.io/skiva/docs/quickstart/">快速上手</a> ·
+  <a href="docs/OPERATIONS.md">部署指南</a> ·
+  <a href="LICENSE">Apache 2.0</a>
+</p>
 
-**许可证：[Apache License 2.0](LICENSE)。允许商业使用、修改、分发、销售及收费托管。**
-使用与分发要求见[中文许可说明](LICENSE-FAQ.md)、[NOTICE](NOTICE) 和[第三方声明](THIRD_PARTY_NOTICES.md)。
+## Skiva 是什么
 
-企业内部 Skills 交付平台。外部 Git 是唯一内容来源；Go 后端完成静态校验、不可变快照、渠道发布与权限校验；Next.js 管理端操作真实 API；Linux 客户端通过只读 FUSE 向 Agent 暴露文件。
+Skiva 帮助团队将 Git 中的 Skills 校验、组合为不可变快照，再通过发布渠道交付给 Agent。支持连接外部 Git 仓库，也支持自建托管仓库，适合企业内部自部署。
 
-## 本地运行
+你可以在控制台查看源码与版本差异、配置流水线、审核发布内容和回滚版本。Agent 通过 Linux 只读文件挂载使用获得授权的 Skills。
 
-要求 Docker、Node 24、Git、Python 3。Makefile 使用 Go **1.26.10** 工具链（自动下载，不修改全局 Go 安装）。
+## 核心能力
+
+| 能力 | 说明 |
+| --- | --- |
+| Git 仓库 | 外部仓库同步、Webhook、定期同步，以及原生 HTTPS Git 托管 |
+| 校验流水线 | 基于固定 Commit 构建，检查内容、引用、路径与密钥，不执行仓库脚本 |
+| 版本与发布 | Skill 版本、文件浏览与差异、发布预览、不可变快照、Canary / Stable 渠道与回滚 |
+| Agent 交付 | Profile 授权、动态更新或固定版本、Linux FUSE 挂载与离线缓存策略 |
+| 权限与审计 | 成员角色、仓库权限、客户端凭据轮换与吊销、发布操作审计 |
+| 运维与集成 | OpenAPI、Prometheus、OTLP、备份恢复、数据完整性巡检与部署模板 |
+
+## 一次发布如何完成
+
+1. **准备来源**：连接外部 Git 仓库，或创建 Skiva 托管仓库并推送 Skills。
+2. **构建版本**：流水线读取固定 Commit，完成发现、校验与产物构建。
+3. **组合快照**：选择 Skill 版本，预览变化并创建不可变快照。
+4. **推进渠道**：先发布到 Canary 验证，再推进 Stable；需要时回滚到历史快照。
+5. **交付 Agent**：通过 Profile 指定渠道、Skills 与更新模式，客户端读取授权内容。
+
+Git 推送只触发来源更新与构建，不会自动推进 Stable。详细步骤见[第一次发布](https://linghechen.github.io/skiva/docs/quickstart/)和[发布与回滚](https://linghechen.github.io/skiva/docs/releases/)。
+
+## 本地启动
+
+准备 Go（支持工具链自动下载）、Node.js 24、Docker、Git 和 Python 3。Makefile 使用 Go 1.26.10 工具链；启动前确保 Docker 已运行。
 
 ```bash
+git clone https://github.com/LingHeChen/skiva.git
+cd skiva
 cp .env.example .env.local
-# 将 SKIVA_ADMIN_PASSWORD 改为至少 14 字符的独立密码
+```
+
+编辑 `.env.local`，将 `SKIVA_ADMIN_PASSWORD` 改为至少 14 个字符的独立密码，然后运行：
+
+```bash
 make deps
 make dev
 ```
 
-默认 UI `http://localhost:3000`，API `http://localhost:8080`，PostgreSQL `localhost:55432`。如果 3000 被占用，设置 Web 启动端口并将 `SKIVA_WEB_ORIGIN` 同步为实际地址。开发管理员邮箱默认 `admin@localhost`；密码从 `.env.local` 读取。生产环境禁止本地密码登录，使用 OIDC。
+| 服务 | 默认地址 |
+| --- | --- |
+| 管理控制台 | <http://localhost:3000> |
+| 使用文档 | <http://localhost:3000/docs> |
+| 后端 API | <http://localhost:8080> |
+| PostgreSQL | `localhost:55432` |
 
-本次工作区预览使用 `http://localhost:3001`。开发密码只用于本地测试，不可用于生产。
+开发管理员邮箱默认为 `admin@localhost`，密码使用 `.env.local` 中的配置。如果需要修改前端端口，同时设置 `SKIVA_WEB_PORT` 和 `SKIVA_WEB_ORIGIN`。
 
-## 完整功能
+本地密码登录仅用于开发环境。部署到正式环境需要配置 OIDC、TLS、持久化存储和备份，参见[运维手册](docs/OPERATIONS.md)与[单机预生产部署模板](deployments/preproduction/README.md)。
 
-- Git 仓库创建/配置/连接测试/同步/停用/软删除，GitHub/GitLab/Gitea Webhook、定期 reconcile。
-- PostgreSQL 租约任务、固定 Commit 构建、版本化校验、引用诊断、SSRF/路径/特殊 inode/密钥检查，不运行来源脚本。
-- Skill 版本、文件树、只读安全 Markdown、内容差异；发布组合预览、不可变 Snapshot、Canary/Stable、并发冲突与回滚。
-- Profile Skill 授权、dynamic/pinned、离线策略；客户端注册、轮换、吊销、心跳和一次性令牌。
-- Manifest/CAS Blob/Range/SSE；每次取内容先校验身份、快照与对象成员关系。
-- Linux FUSE、旧句柄稳定性、持久化哈希缓存、断网策略、在线撤权、SSE+轮询、本地控制接口。
-- 成员角色、账户停用、组织/安全设置、Secret 引用、站内通知、审计、响应式管理端和明暗主题。
-- OpenAPI/TS SDK、SQL 迁移/sqlc、Prometheus、OTLP、Grafana、备份恢复、完整性巡检、安全 GC、CI。
+## 启用 Git 托管
 
-## 真实演示数据
+原生 Git 托管默认关闭。完成数据库迁移后，按部署需要逐步启用：
 
-```bash
-python3 scripts/demo-source.py
-# 新终端：根据脚本输出配置 SKIVA_GIT_CA_BUNDLE、SKIVA_GIT_ALLOWLIST，启动 API
-SKIVA_ADMIN_PASSWORD='你的开发密码' python3 scripts/seed-demo.py
+```dotenv
+SKIVA_MANAGED_GIT_ENABLED=true
+SKIVA_MANAGED_GIT_WRITE_ENABLED=true
+SKIVA_MANAGED_GIT_AUTO_CI_ENABLED=true
+SKIVA_GIT_PUBLIC_URL=https://skills.example.internal
 ```
 
-脚本创建真实工作树和 bare Git 仓库，用本地 HTTPS 供平台 fetch。不是直接向数据库插入 Registry 假数据。`--broken` 可创建缺失引用的初始仓库；修复、commit、push 后重新同步。
+在控制台创建托管仓库并签发仓库访问令牌后，即可使用标准 Git HTTPS clone、fetch 和 push。反向代理需要将 `/git/` 转发到 Go 服务。
 
-## 验证
+具体配置、权限与备份要求见 [Git 托管指南](docs/hosting/managed-git.md)。
+
+## 接入 Agent
+
+Linux 客户端将获得授权的 Skills 挂载为只读目录。Profile 决定发布渠道、允许访问的 Skills 和更新模式：
+
+- `dynamic`：跟随渠道更新。
+- `pinned`：固定快照，在任务之间显式重新绑定。
+
+客户端构建命令为 `make build-mount`，产物位于 `bin/`，提供 Linux amd64 和 arm64 版本。挂载需要 Linux FUSE；每个挂载应使用独立缓存目录。
+
+接入步骤见 [Agent 适配说明](docs/AGENT_INTEGRATION.md)，可运行的示例见 [Pydantic AI Agent](examples/pydantic-agent/README.md)。
+
+## 开发与验证
 
 ```bash
-make test-db                      # 创建并迁移独立测试库
-make lint test build
-make openapi-generate sqlc-generate
-make test-e2e                      # API 和 Web 已启动
-cd apps/web && SKIVA_DEMO_E2E=1 npx playwright test delivery.spec.ts
+make test-db                       # 创建并迁移独立测试库
+make lint test build               # 静态检查、测试与构建
+make openapi-generate sqlc-generate # 生成 API 与数据库代码
+make test-e2e                      # 需先启动 API 和 Web
 ```
 
-`make test` 通过 `TEST_DATABASE_URL` 指定专用测试库；直接运行 `go test` 时使用 `SKIVA_TEST_DATABASE_URL`。集成测试会创建持久测试组织及元数据，但对象使用临时目录；不要对生产数据库运行。
+`make test` 使用 `TEST_DATABASE_URL` 指定测试库；直接执行 Go 测试时使用 `SKIVA_TEST_DATABASE_URL`。集成测试会写入数据，应使用独立测试库。
 
-API 契约校验：`make validation-deps` 后，在设置 `SKIVA_ADMIN_PASSWORD` 的环境运行 `make contract-check`。
+本地 Git 演示来源可通过 `python3 scripts/demo-source.py` 创建，再按照脚本提示配置 HTTPS 证书和允许列表，使用 `scripts/seed-demo.py` 导入演示场景。验证覆盖与部署限制见[验收说明](docs/ACCEPTANCE.md)。
 
-## 客户端
+## 文档与项目结构
 
-```bash
-make build-mount
-chmod 600 client.token
-skills-mount login --server https://skills.example.internal --token-file client.token
-skills-mount mount --profile PROFILE_ID --mode dynamic --path ~/agent-skills
-skills-mount status
-skills-mount refresh
-skills-mount refresh --repin        # 仅在任务之间重新绑定 pinned 快照
-skills-mount unmount --path ~/agent-skills
-```
+完整指南见 [Skiva 在线文档](https://linghechen.github.io/skiva/)。
 
-每个挂载使用独立 `--cache` 目录。Profile 由服务端决定渠道与模式，客户端不能越权覆盖渠道。敏感 Profile 默认租约到期后拒绝读取。Linux FUSE 环境及测试边界见 [验收报告](docs/ACCEPTANCE.md)。
+| 目录 | 内容 |
+| --- | --- |
+| `apps/server` | Go API、Git 托管、构建与分发服务 |
+| `apps/web` | Next.js 控制台与文档站 |
+| `apps/mount` | Linux FUSE 客户端 |
+| `packages` | OpenAPI、分发协议与数据 Schema |
+| `migrations` | 数据库迁移 |
+| `deployments` | 容器、部署与监控配置 |
+| `examples` | Agent 集成示例 |
+| `docs` | 运维、集成与验收说明 |
+| `tests` | 浏览器与静态站测试 |
+| `scripts` | 开发、构建、备份与验证工具 |
 
-## 文档
+文档正文位于 `apps/web/content/docs.ts`。运行 `npm run build:docs --prefix apps/web` 可生成静态站，产物位于 `.pages-build/out`；推送到 `main` 的文档相关变更由 GitHub Actions 自动发布到 GitHub Pages。
 
-在线文档：**https://linghechen.github.io/skiva/**。推送到 `main` 后，文档相关变更通过 GitHub Actions 自动构建发布。
+## 许可证
 
-本地静态构建：`npm run build:docs --prefix apps/web`，产物为 `.pages-build/out`，默认子路径 `/skiva`。该产物只包含文档，不包含管理端或 API。
-
-启动 Web 后访问 `/docs`，或从管理端侧栏「使用文档」进入中文文档站。包含快速上手、发布更新、流水线配置、Agent 接入和运维指南，支持全文搜索、代码复制、深色主题和手机阅读。当前预览：http://localhost:3001/docs。
-
-文档正文维护在 `apps/web/content/docs.ts`，每篇使用 Markdown 内容；新增条目会自动进入导航、搜索、静态页面和翻页链接。
-
-- 部署/恢复：[运维手册](docs/OPERATIONS.md)
-- Agent 集成：[适配说明](docs/AGENT_INTEGRATION.md)
-- API：[OpenAPI 3.1](packages/openapi/openapi.yaml)
-- 测试：[验收报告](docs/ACCEPTANCE.md)
-
-## Native managed Git hosting
-
-Skiva can host private Skills repositories alongside existing external Git sources. After migration, enable `SKIVA_MANAGED_GIT_ENABLED`, `SKIVA_MANAGED_GIT_WRITE_ENABLED`, and `SKIVA_MANAGED_GIT_AUTO_CI_ENABLED` gradually. All default to `false`. Configure `SKIVA_GIT_PUBLIC_URL` and route `/git/` directly to the Go service behind TLS.
-
-Create a managed repository in the console, issue a repository-scoped Git PAT, then use standard HTTPS clone/fetch/push. Accepted refs enter the existing fixed-commit pipeline; Git push never promotes Stable automatically. Published artifacts and existing delivery clients remain compatible.
-
-See [managed Git guide](docs/hosting/managed-git.md) and [acceptance record](docs/hosting/ACCEPTANCE.md). Bare repositories and durable event spool reside in the existing data volume and must be restored together with PostgreSQL and CAS.
+Skiva 使用 [Apache License 2.0](LICENSE)，允许商业使用、修改与分发。相关要求见[中文许可说明](LICENSE-FAQ.md)、[NOTICE](NOTICE) 和[第三方声明](THIRD_PARTY_NOTICES.md)。
