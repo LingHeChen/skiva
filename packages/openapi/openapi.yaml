@@ -7274,7 +7274,7 @@
       "sessionCookie": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "esdp_session"
+        "name": "skiva_session"
       }
     },
     "schemas": {

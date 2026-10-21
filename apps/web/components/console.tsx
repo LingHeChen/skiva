@@ -137,7 +137,7 @@ function Shell() {
     return () => window.removeEventListener("keydown", key);
   }, []);
   useEffect(() => {
-    const t = localStorage.getItem("esdp-theme") || "system";
+    const t = localStorage.getItem("skiva-theme") || "system";
     setTheme(t);
   }, []);
   useEffect(() => {
@@ -147,7 +147,7 @@ function Shell() {
           ? "dark"
           : "light"
         : theme;
-    localStorage.setItem("esdp-theme", theme);
+    localStorage.setItem("skiva-theme", theme);
   }, [theme]);
   useEffect(() => {
     if (me.error instanceof ApiError && me.error.status === 401)
@@ -342,7 +342,7 @@ function Shell() {
           )}
         </main>
         <footer>
-          ESDP <span>不可变快照 · 可追溯发布 · 只读分发</span>
+          SKIVA <span>不可变快照 · 可追溯发布 · 只读分发</span>
           <span>Enterprise Skills Delivery Platform</span>
         </footer>
       </div>
@@ -1633,7 +1633,7 @@ function RepositoryForm({ initial }: { initial?: any }) {
     [
       "webhookSecretRef",
       "Webhook Secret 环境变量（可选）",
-      "ESDP_WEBHOOK_SECRET",
+      "SKIVA_WEBHOOK_SECRET",
     ],
   ];
   return (
@@ -1683,7 +1683,7 @@ function RepositoryForm({ initial }: { initial?: any }) {
         </select>
       </label>
       <p className="info-note">
-        私网 Git 需在服务端 ESDP_GIT_ALLOWLIST 中明确配置主机名。Secret
+        私网 Git 需在服务端 SKIVA_GIT_ALLOWLIST 中明确配置主机名。Secret
         只引用服务端环境变量。
       </p>
     </FormBox>

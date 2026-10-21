@@ -37,7 +37,7 @@ Executed runtime discovery checks (no model invocation):
 - Claude Code 2.1.236: stream initialization returned the project Skill in command metadata.
 - OpenCode 1.19.3: `debug skill --pure` found the project symlink Skill. A project-local binary was used because the pre-existing 1.1.20 executable did not run successfully; global installation was not changed.
 
-Repeatable checks: `scripts/check-codex-discovery.py`, `check-claude-discovery.py`, `check-opencode-discovery.py` (set `ESDP_OPENCODE_BIN` for another local binary). Logs are under `test-results/agent-adapters/`.
+Repeatable checks: `scripts/check-codex-discovery.py`, `check-claude-discovery.py`, `check-opencode-discovery.py` (set `SKIVA_OPENCODE_BIN` for another local binary). Logs are under `test-results/agent-adapters/`.
 
 These discovery checks ran on the macOS host, separately from real Linux FUSE tests. They do not certify combined Linux Agent sandbox access, model invocation, or in-memory context refresh during an existing task. Complete the deployment-specific acceptance above before rollout.
 

@@ -1,4 +1,4 @@
-module esdp
+module skiva
 
 go 1.26.10
 

@@ -1,16 +1,16 @@
-name: esdp
+name: skiva
 services:
   postgres:
     image: postgres:17
-    container_name: esdp-postgres
+    container_name: skiva-postgres
     environment:
-      POSTGRES_DB: esdp
-      POSTGRES_USER: esdp
-      POSTGRES_PASSWORD: ${ESDP_DB_PASSWORD:-esdp-dev}
+      POSTGRES_DB: skiva
+      POSTGRES_USER: skiva
+      POSTGRES_PASSWORD: ${SKIVA_DB_PASSWORD:-skiva-dev}
     ports: ['127.0.0.1:55432:5432']
     volumes: [postgres:/var/lib/postgresql/data]
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U esdp']
+      test: ['CMD-SHELL', 'pg_isready -U skiva']
       interval: 3s
       retries: 20
   server:
@@ -19,17 +19,17 @@ services:
       context: ..
       dockerfile: deployments/docker/server.Dockerfile
     environment:
-      ESDP_ENV: ${ESDP_ENV:-local}
-      ESDP_OIDC_ISSUER: ${ESDP_OIDC_ISSUER:-}
-      ESDP_OIDC_CLIENT_ID: ${ESDP_OIDC_CLIENT_ID:-}
-      ESDP_OIDC_CLIENT_SECRET: ${ESDP_OIDC_CLIENT_SECRET:-}
-      ESDP_DATABASE_URL: postgres://esdp:${ESDP_DB_PASSWORD:-esdp-dev}@postgres:5432/esdp?sslmode=disable
-      ESDP_ADMIN_PASSWORD: ${ESDP_ADMIN_PASSWORD:-}
-      ESDP_ADMIN_EMAIL: ${ESDP_ADMIN_EMAIL:-admin@localhost}
-      ESDP_LISTEN: 0.0.0.0:8080
-      ESDP_DATA_DIR: /data
-      ESDP_WEB_ORIGIN: ${ESDP_WEB_ORIGIN:-http://localhost:3000}
-      ESDP_GIT_ALLOWLIST: ${ESDP_GIT_ALLOWLIST:-}
+      SKIVA_ENV: ${SKIVA_ENV:-local}
+      SKIVA_OIDC_ISSUER: ${SKIVA_OIDC_ISSUER:-}
+      SKIVA_OIDC_CLIENT_ID: ${SKIVA_OIDC_CLIENT_ID:-}
+      SKIVA_OIDC_CLIENT_SECRET: ${SKIVA_OIDC_CLIENT_SECRET:-}
+      SKIVA_DATABASE_URL: postgres://skiva:${SKIVA_DB_PASSWORD:-skiva-dev}@postgres:5432/skiva?sslmode=disable
+      SKIVA_ADMIN_PASSWORD: ${SKIVA_ADMIN_PASSWORD:-}
+      SKIVA_ADMIN_EMAIL: ${SKIVA_ADMIN_EMAIL:-admin@localhost}
+      SKIVA_LISTEN: 0.0.0.0:8080
+      SKIVA_DATA_DIR: /data
+      SKIVA_WEB_ORIGIN: ${SKIVA_WEB_ORIGIN:-http://localhost:3000}
+      SKIVA_GIT_ALLOWLIST: ${SKIVA_GIT_ALLOWLIST:-}
     ports: ['127.0.0.1:8080:8080']
     volumes: [artifacts:/data]
     depends_on:
@@ -43,7 +43,7 @@ services:
       context: ..
       dockerfile: deployments/docker/web.Dockerfile
       args:
-        ESDP_API_URL: http://server:8080
+        SKIVA_API_URL: http://server:8080
     ports: ['127.0.0.1:3000:3000']
     depends_on: [server]
     security_opt: [no-new-privileges:true]

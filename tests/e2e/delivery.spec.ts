@@ -2,12 +2,12 @@ import { test, expect } from "../../apps/web/node_modules/@playwright/test";
 test("real Git build → immutable release → canary → profile → credential rotation", async ({
   page,
 }) => {
-  test.skip(process.env.ESDP_DEMO_E2E !== "1", "Run seed-demo.py first");
+  test.skip(process.env.SKIVA_DEMO_E2E !== "1", "Run seed-demo.py first");
   await page.goto("/login");
   await page.getByLabel("邮箱", { exact: true }).fill("admin@localhost");
   await page
     .getByLabel("密码", { exact: true })
-    .fill(process.env.ESDP_ADMIN_PASSWORD || "local-esdp-development-2026");
+    .fill(process.env.SKIVA_ADMIN_PASSWORD || "local-skiva-development-2026");
   await page.getByRole("button", { name: "登录工作区", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
   await page.goto("/skills");

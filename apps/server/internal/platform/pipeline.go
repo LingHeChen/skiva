@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"esdp/apps/server/internal/db"
-	"esdp/packages/protocol"
+	"skiva/apps/server/internal/db"
+	"skiva/packages/protocol"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"go.opentelemetry.io/otel"
@@ -67,7 +67,7 @@ func (s *Server) job(ctx context.Context) {
 	var p map[string]string
 	if e = json.Unmarshal(payload, &p); e == nil {
 		parent := otel.GetTextMapPropagator().Extract(ctx, propagation.MapCarrier(p))
-		parent, span := otel.Tracer("esdp").Start(parent, "pipeline.job")
+		parent, span := otel.Tracer("skiva").Start(parent, "pipeline.job")
 		span.SetAttributes(attribute.String("job.id", fmt.Sprint(id)), attribute.String("repository.id", p["repositoryId"]), attribute.String("request.id", p["requestId"]))
 		defer span.End()
 		c, cancel := context.WithTimeout(parent, 4*time.Minute)
@@ -141,7 +141,7 @@ func (s *Server) build(ctx context.Context, repo, commit string) error {
 	effectiveRoot, configBytes, effectivePolicy, configErr := s.repoConfig(ctx, dir, commit, root, ref)
 	ctx = context.WithValue(ctx, ctxKey("validationPolicy"), effectivePolicy)
 	config := protocol.Digest(append(append([]byte(effectiveRoot), configBytes...), mustJSON(policy)...))
-	validator := env("ESDP_VALIDATOR_VERSION", "1")
+	validator := env("SKIVA_VALIDATOR_VERSION", "1")
 	run := ID()
 	var status string
 	e = s.DB.QueryRow(ctx, `INSERT INTO pipeline_runs(id,repository_id,commit_sha,config_digest,validator_version,status,attempt,started_at) VALUES($1,$2,$3,$4,$5,'running',1,now()) ON CONFLICT(repository_id,commit_sha,config_digest,validator_version) DO UPDATE SET attempt=pipeline_runs.attempt+CASE WHEN pipeline_runs.status IN ('failed','queued','running') THEN 1 ELSE 0 END,status=CASE WHEN pipeline_runs.status IN ('failed','queued','running') THEN 'running' ELSE pipeline_runs.status END RETURNING id,status`, run, repo, commit, config, validator).Scan(&run, &status)

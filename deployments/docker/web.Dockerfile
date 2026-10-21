@@ -4,8 +4,8 @@ COPY apps/web/package*.json ./
 RUN npm ci
 COPY apps/web ./
 COPY packages/openapi /src/packages/openapi
-ARG ESDP_API_URL=http://server:8080
-ENV ESDP_API_URL=$ESDP_API_URL
+ARG SKIVA_API_URL=http://server:8080
+ENV SKIVA_API_URL=$SKIVA_API_URL
 RUN npm run build
 FROM node:24-bookworm-slim
 WORKDIR /app

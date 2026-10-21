@@ -1,8 +1,8 @@
 SHELL := /bin/bash
 export GOTOOLCHAIN := go1.26.10
-DATABASE_URL ?= $(if $(ESDP_DATABASE_URL),$(ESDP_DATABASE_URL),postgres://esdp:esdp-dev@localhost:55432/esdp?sslmode=disable)
-TEST_DATABASE_URL ?= postgres://esdp:esdp-dev@localhost:55432/esdp_test?sslmode=disable
-export ESDP_DATABASE_URL := $(DATABASE_URL)
+DATABASE_URL ?= $(if $(SKIVA_DATABASE_URL),$(SKIVA_DATABASE_URL),postgres://skiva:skiva-dev@localhost:55432/skiva?sslmode=disable)
+TEST_DATABASE_URL ?= postgres://skiva:skiva-dev@localhost:55432/skiva_test?sslmode=disable
+export SKIVA_DATABASE_URL := $(DATABASE_URL)
 GOOSE := go run github.com/pressly/goose/v3/cmd/goose@v3.24.1
 .PHONY: dev deps db migrate-up migrate-down lint test test-e2e openapi-generate sqlc-generate build-server build-mount build backup verify-artifacts
 
@@ -28,7 +28,7 @@ lint:
 	npm run typecheck --prefix apps/web
 
 test:
-	ESDP_TEST_DATABASE_URL='$(TEST_DATABASE_URL)' go test -race ./apps/server/... ./apps/mount/... ./packages/...
+	SKIVA_TEST_DATABASE_URL='$(TEST_DATABASE_URL)' go test -race ./apps/server/... ./apps/mount/... ./packages/...
 
 test-e2e:
 	cd apps/web && npx playwright test
@@ -41,7 +41,7 @@ sqlc-generate:
 	go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
 
 build-server:
-	go build -trimpath -o bin/esdp-server ./apps/server/cmd/server
+	go build -trimpath -o bin/skiva-server ./apps/server/cmd/server
 
 build-mount:
 	GOOS=linux GOARCH=amd64 go build -trimpath -o bin/skills-mount-linux-amd64 ./apps/mount/cmd/skills-mount
@@ -64,5 +64,5 @@ contract-check:
 	.data/validation-venv/bin/python scripts/contract-check.py
 
 test-db: db
-	docker exec esdp-postgres psql -U esdp -d esdp_test -c 'SELECT 1' >/dev/null 2>&1 || docker exec esdp-postgres createdb -U esdp esdp_test
+	docker exec skiva-postgres psql -U skiva -d skiva_test -c 'SELECT 1' >/dev/null 2>&1 || docker exec skiva-postgres createdb -U skiva skiva_test
 	$(MAKE) DATABASE_URL='$(TEST_DATABASE_URL)' migrate-up

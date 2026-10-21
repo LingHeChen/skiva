@@ -57,7 +57,7 @@ func (s *Server) remoteContext(ctx context.Context, repo, remote string) (contex
 		opts.Env = []string{"GIT_CONFIG_COUNT=1", "GIT_CONFIG_KEY_0=http.curloptResolve", "GIT_CONFIG_VALUE_0=" + u.Hostname() + ":" + port + ":" + resolved}
 	} else {
 		opts.SSH = "ssh -oBatchMode=yes -oStrictHostKeyChecking=yes -oHostName=" + ip.String() + " -oHostKeyAlias=" + u.Hostname()
-		known := env("ESDP_SSH_KNOWN_HOSTS", "")
+		known := env("SKIVA_SSH_KNOWN_HOSTS", "")
 		if known != "" {
 			if strings.ContainsAny(known, " '\n\r\t") {
 				return ctx, cleanup, errors.New("invalid known-hosts path")

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"net/http"
@@ -17,9 +17,9 @@ import (
 
 func integration(t *testing.T) (*Server, *httptest.Server, string) {
 	t.Helper()
-	dsn := os.Getenv("ESDP_TEST_DATABASE_URL")
+	dsn := os.Getenv("SKIVA_TEST_DATABASE_URL")
 	if dsn == "" {
-		t.Skip("ESDP_TEST_DATABASE_URL required")
+		t.Skip("SKIVA_TEST_DATABASE_URL required")
 	}
 	db, e := pgxpool.New(context.Background(), dsn)
 	if e != nil {

@@ -32,11 +32,11 @@ func TestIntegrationE03E04E06RealHTTPSGit(t *testing.T) {
 	defer gitServer.Close()
 	ca := filepath.Join(t.TempDir(), "ca.pem")
 	os.WriteFile(ca, pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: gitServer.Certificate().Raw}), 0600)
-	t.Setenv("ESDP_GIT_CA_BUNDLE", ca)
+	t.Setenv("SKIVA_GIT_CA_BUNDLE", ca)
 	u, _ := url.Parse(gitServer.URL)
 	s.AllowHosts = []string{u.Hostname()}
-	t.Setenv("ESDP_TEST_WEBHOOK_SECRET", "fixture-secret")
-	status, out := request(t, ts, admin, "POST", "/api/v1/repositories", map[string]any{"name": "fixture", "remoteUrl": gitServer.URL + "/skills.git", "defaultRef": "refs/heads/main", "skillRoot": "", "status": "active", "webhookSecretRef": "ESDP_TEST_WEBHOOK_SECRET"}, "")
+	t.Setenv("SKIVA_TEST_WEBHOOK_SECRET", "fixture-secret")
+	status, out := request(t, ts, admin, "POST", "/api/v1/repositories", map[string]any{"name": "fixture", "remoteUrl": gitServer.URL + "/skills.git", "defaultRef": "refs/heads/main", "skillRoot": "", "status": "active", "webhookSecretRef": "SKIVA_TEST_WEBHOOK_SECRET"}, "")
 	if status != 200 {
 		t.Fatal(status, out)
 	}
@@ -78,7 +78,7 @@ func TestIntegrationE03E04E06RealHTTPSGit(t *testing.T) {
 	if statusDB != "succeeded" {
 		t.Fatal("scan failed", statusDB)
 	}
-	t.Setenv("ESDP_VALIDATOR_VERSION", "2")
+	t.Setenv("SKIVA_VALIDATOR_VERSION", "2")
 	if e := s.build(ctx, repo, sha); e != nil {
 		t.Fatal(e)
 	}

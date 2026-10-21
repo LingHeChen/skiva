@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -52,14 +52,14 @@ func env(k, d string) string {
 	return d
 }
 func New(ctx context.Context) (*Server, error) {
-	db, e := pgxpool.New(ctx, env("ESDP_DATABASE_URL", "postgres://esdp:esdp-dev@localhost:55432/esdp?sslmode=disable"))
+	db, e := pgxpool.New(ctx, env("SKIVA_DATABASE_URL", "postgres://skiva:skiva-dev@localhost:55432/skiva?sslmode=disable"))
 	if e != nil {
 		return nil, e
 	}
 	if e = db.Ping(ctx); e != nil {
 		return nil, e
 	}
-	s := &Server{DB: db, Data: env("ESDP_DATA_DIR", ".data"), AllowHosts: strings.FieldsFunc(os.Getenv("ESDP_GIT_ALLOWLIST"), func(r rune) bool { return r == ',' }), Production: os.Getenv("ESDP_ENV") == "production", Origin: env("ESDP_WEB_ORIGIN", "http://localhost:3000")}
+	s := &Server{DB: db, Data: env("SKIVA_DATA_DIR", ".data"), AllowHosts: strings.FieldsFunc(os.Getenv("SKIVA_GIT_ALLOWLIST"), func(r rune) bool { return r == ',' }), Production: os.Getenv("SKIVA_ENV") == "production", Origin: env("SKIVA_WEB_ORIGIN", "http://localhost:3000")}
 	e = os.MkdirAll(filepath.Join(s.Data, "objects"), 0700)
 	return s, e
 }

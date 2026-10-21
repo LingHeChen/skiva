@@ -19,3 +19,7 @@ __pycache__/
 *.pem
 *.key
 *.token
+
+# Isolated documentation export
+.pages-build/
+.pages-preview/

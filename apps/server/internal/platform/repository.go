@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
@@ -89,7 +89,7 @@ func (s *Server) git(ctx context.Context, dir string, args ...string) ([]byte, e
 			cmd.Env = append(cmd.Env, "GIT_SSH_COMMAND="+opts.SSH)
 		}
 	}
-	if ca := os.Getenv("ESDP_GIT_CA_BUNDLE"); ca != "" {
+	if ca := os.Getenv("SKIVA_GIT_CA_BUNDLE"); ca != "" {
 		cmd.Env = append(cmd.Env, "GIT_SSL_CAINFO="+ca)
 	}
 	var out limitedBuffer

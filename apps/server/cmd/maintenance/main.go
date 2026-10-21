@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"fmt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"os"
@@ -22,11 +22,11 @@ func main() {
 }
 func run() error {
 	ctx := context.Background()
-	dsn := os.Getenv("ESDP_DATABASE_URL")
+	dsn := os.Getenv("SKIVA_DATABASE_URL")
 	if dsn == "" {
-		dsn = "postgres://esdp:esdp-dev@localhost:55432/esdp?sslmode=disable"
+		dsn = "postgres://skiva:skiva-dev@localhost:55432/skiva?sslmode=disable"
 	}
-	data := os.Getenv("ESDP_DATA_DIR")
+	data := os.Getenv("SKIVA_DATA_DIR")
 	if data == "" {
 		data = ".data"
 	}

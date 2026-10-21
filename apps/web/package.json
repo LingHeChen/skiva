@@ -1,12 +1,14 @@
 {
-  "name": "esdp-admin",
+  "name": "skiva-admin",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:docs": "node ../../scripts/build-docs.mjs",
+    "test:docs": "playwright test --config ../../tests/pages/playwright.config.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.0",

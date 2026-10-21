@@ -123,3 +123,10 @@ Source, configuration, migrations, tests and documentation. Binaries, dependenci
 - `apps/web/components/documentation.tsx`
 - `apps/web/content/docs.ts`
 - `tests/e2e/docs.spec.ts`
+
+## Static documentation publishing
+
+- `.github/workflows/pages.yml`
+- `scripts/build-docs.mjs`
+- `tests/pages/playwright.config.ts`
+- `tests/pages/docs.spec.ts`

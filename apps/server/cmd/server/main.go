@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"esdp/apps/server/internal/platform"
+	"skiva/apps/server/internal/platform"
 	"log/slog"
 	"net/http"
 	"os"
@@ -31,7 +31,7 @@ func main() {
 		os.Exit(1)
 	}
 	go s.Worker(ctx)
-	addr := os.Getenv("ESDP_LISTEN")
+	addr := os.Getenv("SKIVA_LISTEN")
 	if addr == "" {
 		addr = "127.0.0.1:8080"
 	}

@@ -91,7 +91,7 @@ for method,path,handler in re.findall(r'r\.(Get|Post|Patch|Delete)\("([^"]+)",\s
  if code=='302':op['responses']['302']={'description':'Redirect to identity provider or dashboard'}
  if path=='/metrics':op['responses']['200']={'description':'Prometheus metrics; restrict network access','content':{'text/plain':{'schema':str_}}};op['security']=[]
  paths.setdefault(path,{})[method]=op
-spec={'openapi':'3.1.0','info':{'title':'Enterprise Skills Delivery Platform','version':'1.0.0'},'servers':[{'url':'http://localhost:8080','description':'Local development; production requires HTTPS'}],'paths':paths,'components':{'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer'},'sessionCookie':{'type':'apiKey','in':'cookie','name':'esdp_session'}},'schemas':schemas}}
+spec={'openapi':'3.1.0','info':{'title':'Enterprise Skills Delivery Platform','version':'1.0.0'},'servers':[{'url':'http://localhost:8080','description':'Local development; production requires HTTPS'}],'paths':paths,'components':{'securitySchemes':{'bearerAuth':{'type':'http','scheme':'bearer'},'sessionCookie':{'type':'apiKey','in':'cookie','name':'skiva_session'}},'schemas':schemas}}
 (root/'packages/openapi/openapi.yaml').write_text(json.dumps(spec,indent=2)+'\n')
 (root/'packages/schemas/manifest.schema.json').write_text(json.dumps({'$schema':'https://json-schema.org/draft/2020-12/schema',**schemas['Manifest'],'components':{'schemas':schemas}},indent=2)+'\n')
 print(f'Generated {len(paths)} API paths')

@@ -2,7 +2,7 @@ package platform
 
 import (
 	"encoding/json"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 	"strings"

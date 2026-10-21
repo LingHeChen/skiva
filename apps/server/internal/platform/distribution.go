@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"net/http"

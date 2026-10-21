@@ -24,7 +24,7 @@ func TestIntegrationOIDCPKCEAndClaims(t *testing.T) {
 		t.Fatal(e)
 	}
 	nonce, challenge, issuer := "", "", ""
-	audience := "esdp-test"
+	audience := "skiva-test"
 	signer, e := jose.NewSigner(jose.SigningKey{Algorithm: jose.RS256, Key: key}, (&jose.SignerOptions{}).WithType("JWT").WithHeader("kid", "test"))
 	if e != nil {
 		t.Fatal(e)
@@ -51,8 +51,8 @@ func TestIntegrationOIDCPKCEAndClaims(t *testing.T) {
 	}))
 	defer idp.Close()
 	issuer = idp.URL
-	t.Setenv("ESDP_OIDC_ISSUER", issuer)
-	t.Setenv("ESDP_OIDC_CLIENT_ID", "esdp-test")
+	t.Setenv("SKIVA_OIDC_ISSUER", issuer)
+	t.Setenv("SKIVA_OIDC_CLIENT_ID", "skiva-test")
 	s.DB.Exec(t.Context(), "UPDATE users SET subject='local:oidc-test' WHERE org_id=$1", s.Org)
 	client := &http.Client{CheckRedirect: func(r *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }}
 	for _, wrongAudience := range []bool{true, false} {
@@ -71,7 +71,7 @@ func TestIntegrationOIDCPKCEAndClaims(t *testing.T) {
 		if wrongAudience {
 			audience = "attacker"
 		} else {
-			audience = "esdp-test"
+			audience = "skiva-test"
 		}
 		req, _ := http.NewRequest("GET", ts.URL+"/api/v1/auth/oidc/callback?code=verified&state="+url.QueryEscape(redirect.Query().Get("state")), nil)
 		for _, c := range cookies {
@@ -93,7 +93,7 @@ func TestIntegrationOIDCPKCEAndClaims(t *testing.T) {
 		}
 		session := ""
 		for _, c := range res.Cookies() {
-			if c.Name == "esdp_session" {
+			if c.Name == "skiva_session" {
 				session = c.Value
 				if !c.HttpOnly || c.SameSite != http.SameSiteStrictMode {
 					t.Fatal("unsafe session cookie")

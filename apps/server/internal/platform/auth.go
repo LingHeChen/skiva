@@ -3,7 +3,7 @@ package platform
 import (
 	"context"
 	"encoding/json"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"github.com/jackc/pgx/v5"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
@@ -12,16 +12,16 @@ import (
 )
 
 func (s *Server) Bootstrap(ctx context.Context) error {
-	password := env("ESDP_ADMIN_PASSWORD", "")
+	password := env("SKIVA_ADMIN_PASSWORD", "")
 	if len(password) < 14 {
-		return require(false, "ESDP_ADMIN_PASSWORD must contain at least 14 characters")
+		return require(false, "SKIVA_ADMIN_PASSWORD must contain at least 14 characters")
 	}
 	tx, e := s.DB.Begin(ctx)
 	if e != nil {
 		return e
 	}
 	defer tx.Rollback(ctx)
-	org := env("ESDP_ORG_ID", "019a03d8-0000-7000-8000-000000000001")
+	org := env("SKIVA_ORG_ID", "019a03d8-0000-7000-8000-000000000001")
 	e = tx.QueryRow(ctx, "SELECT id FROM organizations WHERE id=$1", org).Scan(&org)
 	if e == pgx.ErrNoRows {
 		_, e = tx.Exec(ctx, "INSERT INTO organizations(id,name) VALUES($1,'Enterprise Skills')", org)
@@ -43,7 +43,7 @@ func (s *Server) Bootstrap(ctx context.Context) error {
 			return e
 		}
 		u := ID()
-		_, e = tx.Exec(ctx, `INSERT INTO users(id,org_id,subject,email,display_name,password_hash) VALUES($1,$2,'local:admin',$3,'Administrator',$4)`, u, org, env("ESDP_ADMIN_EMAIL", "admin@localhost"), string(hash))
+		_, e = tx.Exec(ctx, `INSERT INTO users(id,org_id,subject,email,display_name,password_hash) VALUES($1,$2,'local:admin',$3,'Administrator',$4)`, u, org, env("SKIVA_ADMIN_EMAIL", "admin@localhost"), string(hash))
 		if e != nil {
 			return e
 		}
@@ -84,7 +84,7 @@ func (s *Server) auth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
 		if token == "" {
-			if c, e := r.Cookie("esdp_session"); e == nil {
+			if c, e := r.Cookie("skiva_session"); e == nil {
 				token = c.Value
 			}
 		}
@@ -115,7 +115,7 @@ func (s *Server) session(w http.ResponseWriter, r *http.Request, user string) {
 		s.dbError(w, r, e)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{Name: "esdp_session", Value: token, Path: "/", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteStrictMode, MaxAge: 28800})
+	http.SetCookie(w, &http.Cookie{Name: "skiva_session", Value: token, Path: "/", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteStrictMode, MaxAge: 28800})
 	jsonOut(w, 200, map[string]any{"authenticated": true, "expiresIn": 28800})
 }
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
@@ -139,10 +139,10 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	s.session(w, r, id)
 }
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
-	if c, e := r.Cookie("esdp_session"); e == nil {
+	if c, e := r.Cookie("skiva_session"); e == nil {
 		_, _ = s.DB.Exec(r.Context(), "DELETE FROM sessions WHERE token_hash=$1", protocol.Digest([]byte(c.Value)))
 	}
-	http.SetCookie(w, &http.Cookie{Name: "esdp_session", Value: "", Path: "/", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteStrictMode, MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{Name: "skiva_session", Value: "", Path: "/", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteStrictMode, MaxAge: -1})
 	jsonOut(w, 200, map[string]bool{"ok": true})
 }
 func (s *Server) me(w http.ResponseWriter, r *http.Request) {
@@ -175,7 +175,7 @@ func (s *Server) account(w http.ResponseWriter, r *http.Request) {
 	s.me(w, r)
 }
 func (s *Server) refreshSession(w http.ResponseWriter, r *http.Request) {
-	if c, e := r.Cookie("esdp_session"); e == nil {
+	if c, e := r.Cookie("skiva_session"); e == nil {
 		_, e = s.DB.Exec(r.Context(), "DELETE FROM sessions WHERE token_hash=$1", protocol.Digest([]byte(c.Value)))
 		if e != nil {
 			s.dbError(w, r, e)

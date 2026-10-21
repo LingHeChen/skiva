@@ -1,6 +1,6 @@
 # Skiva
 
-Enterprise Skills Delivery Platform（ESDP）。
+Git-backed Skills Delivery Platform。
 
 企业内部 Skills 交付平台。外部 Git 是唯一内容来源；Go 后端完成静态校验、不可变快照、渠道发布与权限校验；Next.js 管理端操作真实 API；Linux 客户端通过只读 FUSE 向 Agent 暴露文件。
 
@@ -10,12 +10,12 @@ Enterprise Skills Delivery Platform（ESDP）。
 
 ```bash
 cp .env.example .env.local
-# 将 ESDP_ADMIN_PASSWORD 改为至少 14 字符的独立密码
+# 将 SKIVA_ADMIN_PASSWORD 改为至少 14 字符的独立密码
 make deps
 make dev
 ```
 
-默认 UI `http://localhost:3000`，API `http://localhost:8080`，PostgreSQL `localhost:55432`。如果 3000 被占用，设置 Web 启动端口并将 `ESDP_WEB_ORIGIN` 同步为实际地址。开发管理员邮箱默认 `admin@localhost`；密码从 `.env.local` 读取。生产环境禁止本地密码登录，使用 OIDC。
+默认 UI `http://localhost:3000`，API `http://localhost:8080`，PostgreSQL `localhost:55432`。如果 3000 被占用，设置 Web 启动端口并将 `SKIVA_WEB_ORIGIN` 同步为实际地址。开发管理员邮箱默认 `admin@localhost`；密码从 `.env.local` 读取。生产环境禁止本地密码登录，使用 OIDC。
 
 本次工作区预览使用 `http://localhost:3001`。开发密码只用于本地测试，不可用于生产。
 
@@ -34,8 +34,8 @@ make dev
 
 ```bash
 python3 scripts/demo-source.py
-# 新终端：根据脚本输出配置 ESDP_GIT_CA_BUNDLE、ESDP_GIT_ALLOWLIST，启动 API
-ESDP_ADMIN_PASSWORD='你的开发密码' python3 scripts/seed-demo.py
+# 新终端：根据脚本输出配置 SKIVA_GIT_CA_BUNDLE、SKIVA_GIT_ALLOWLIST，启动 API
+SKIVA_ADMIN_PASSWORD='你的开发密码' python3 scripts/seed-demo.py
 ```
 
 脚本创建真实工作树和 bare Git 仓库，用本地 HTTPS 供平台 fetch。不是直接向数据库插入 Registry 假数据。`--broken` 可创建缺失引用的初始仓库；修复、commit、push 后重新同步。
@@ -47,12 +47,12 @@ make test-db                      # 创建并迁移独立测试库
 make lint test build
 make openapi-generate sqlc-generate
 make test-e2e                      # API 和 Web 已启动
-cd apps/web && ESDP_DEMO_E2E=1 npx playwright test delivery.spec.ts
+cd apps/web && SKIVA_DEMO_E2E=1 npx playwright test delivery.spec.ts
 ```
 
-`make test` 通过 `TEST_DATABASE_URL` 指定专用测试库；直接运行 `go test` 时使用 `ESDP_TEST_DATABASE_URL`。集成测试会创建持久测试组织及元数据，但对象使用临时目录；不要对生产数据库运行。
+`make test` 通过 `TEST_DATABASE_URL` 指定专用测试库；直接运行 `go test` 时使用 `SKIVA_TEST_DATABASE_URL`。集成测试会创建持久测试组织及元数据，但对象使用临时目录；不要对生产数据库运行。
 
-API 契约校验：`make validation-deps` 后，在设置 `ESDP_ADMIN_PASSWORD` 的环境运行 `make contract-check`。
+API 契约校验：`make validation-deps` 后，在设置 `SKIVA_ADMIN_PASSWORD` 的环境运行 `make contract-check`。
 
 ## 客户端
 
@@ -70,6 +70,10 @@ skills-mount unmount --path ~/agent-skills
 每个挂载使用独立 `--cache` 目录。Profile 由服务端决定渠道与模式，客户端不能越权覆盖渠道。敏感 Profile 默认租约到期后拒绝读取。Linux FUSE 环境及测试边界见 [验收报告](docs/ACCEPTANCE.md)。
 
 ## 文档
+
+在线文档：**https://linghechen.github.io/skiva/**。推送到 `main` 后，文档相关变更通过 GitHub Actions 自动构建发布。
+
+本地静态构建：`npm run build:docs --prefix apps/web`，产物为 `.pages-build/out`，默认子路径 `/skiva`。该产物只包含文档，不包含管理端或 API。
 
 启动 Web 后访问 `/docs`，或从管理端侧栏「使用文档」进入中文文档站。包含快速上手、发布更新、流水线配置、Agent 接入和运维指南，支持全文搜索、代码复制、深色主题和手机阅读。当前预览：http://localhost:3001/docs。
 

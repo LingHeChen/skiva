@@ -109,7 +109,7 @@ func (f *fileHandle) Read(ctx context.Context, dest []byte, off int64) (fuse.Rea
 }
 func Mount(ctx context.Context, v *View, path string) error {
 	zero := time.Duration(0)
-	server, e := fs.Mount(path, &Node{View: v}, &fs.Options{MountOptions: fuse.MountOptions{Options: []string{"ro", "default_permissions"}, FsName: "esdp", Name: "skills"}, EntryTimeout: &zero, AttrTimeout: &zero, NegativeTimeout: &zero})
+	server, e := fs.Mount(path, &Node{View: v}, &fs.Options{MountOptions: fuse.MountOptions{Options: []string{"ro", "default_permissions"}, FsName: "skiva", Name: "skills"}, EntryTimeout: &zero, AttrTimeout: &zero, NegativeTimeout: &zero})
 	if e != nil {
 		return e
 	}

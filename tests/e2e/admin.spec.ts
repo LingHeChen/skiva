@@ -3,10 +3,10 @@ async function login(page: any) {
   await page.goto("/login");
   await page
     .getByRole("textbox", { name: "邮箱", exact: true })
-    .fill(process.env.ESDP_ADMIN_EMAIL || "admin@localhost");
+    .fill(process.env.SKIVA_ADMIN_EMAIL || "admin@localhost");
   await page
     .getByRole("textbox", { name: "密码", exact: true })
-    .fill(process.env.ESDP_ADMIN_PASSWORD || "local-esdp-development-2026");
+    .fill(process.env.SKIVA_ADMIN_PASSWORD || "local-skiva-development-2026");
   await page.getByRole("button", { name: "登录工作区", exact: true }).click();
   await expect(page).toHaveURL(/dashboard/);
 }

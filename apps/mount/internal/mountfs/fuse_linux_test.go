@@ -12,8 +12,8 @@ import (
 )
 
 func TestLinuxFUSERealMount(t *testing.T) {
-	if os.Getenv("ESDP_TEST_FUSE") != "1" {
-		t.Skip("ESDP_TEST_FUSE=1 and /dev/fuse required")
+	if os.Getenv("SKIVA_TEST_FUSE") != "1" {
+		t.Skip("SKIVA_TEST_FUSE=1 and /dev/fuse required")
 	}
 	v, g, _, close := fixture(t, "dynamic", "allow_cached")
 	defer close()

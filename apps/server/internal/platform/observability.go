@@ -37,7 +37,7 @@ func InitTelemetry(ctx context.Context) (func(context.Context) error, error) {
 	if e != nil {
 		return nil, e
 	}
-	provider := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter), sdktrace.WithResource(resource.NewSchemaless(attribute.String("service.name", "esdp-server"))))
+	provider := sdktrace.NewTracerProvider(sdktrace.WithBatcher(exporter), sdktrace.WithResource(resource.NewSchemaless(attribute.String("service.name", "skiva-server"))))
 	otel.SetTracerProvider(provider)
 	return provider.Shutdown, nil
 }
@@ -45,7 +45,7 @@ func observe(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
 		ctx := otel.GetTextMapPropagator().Extract(r.Context(), propagation.HeaderCarrier(r.Header))
-		ctx, span := otel.Tracer("esdp").Start(ctx, r.Method)
+		ctx, span := otel.Tracer("skiva").Start(ctx, r.Method)
 		defer span.End()
 		r = r.WithContext(ctx)
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
@@ -84,7 +84,7 @@ func (s *Server) metrics(w http.ResponseWriter, r *http.Request) {
 	}
 	metricsMu.Unlock()
 	fmt.Fprintf(w, "audit_write_failures_total %d\nchannel_promote_conflicts_total %d\n", auditFailures.Load(), promoteConflicts.Load())
-	queries := map[string]string{"esdp_job_queue_pending": "SELECT count(*) FROM job_queue WHERE status IN ('queued','running')", "esdp_clients_stale": "SELECT count(*) FROM mount_clients WHERE revoked_at IS NULL AND (last_seen_at IS NULL OR last_seen_at<now()-interval '5 minutes')", "esdp_credentials_expiring": "SELECT count(*) FROM mount_clients WHERE revoked_at IS NULL AND expires_at<now()+interval '7 days'", "esdp_repositories_error": "SELECT count(*) FROM repositories WHERE status='error' AND deleted_at IS NULL", "pipeline_failures_total": "SELECT count(*) FROM pipeline_runs WHERE status='failed'", "pipeline_duration_seconds_sum": "SELECT COALESCE(sum(extract(epoch FROM ended_at-started_at)),0)::float8 FROM pipeline_runs WHERE ended_at IS NOT NULL", "pipeline_duration_seconds_count": "SELECT count(*) FROM pipeline_runs WHERE ended_at IS NOT NULL"}
+	queries := map[string]string{"skiva_job_queue_pending": "SELECT count(*) FROM job_queue WHERE status IN ('queued','running')", "skiva_clients_stale": "SELECT count(*) FROM mount_clients WHERE revoked_at IS NULL AND (last_seen_at IS NULL OR last_seen_at<now()-interval '5 minutes')", "skiva_credentials_expiring": "SELECT count(*) FROM mount_clients WHERE revoked_at IS NULL AND expires_at<now()+interval '7 days'", "skiva_repositories_error": "SELECT count(*) FROM repositories WHERE status='error' AND deleted_at IS NULL", "pipeline_failures_total": "SELECT count(*) FROM pipeline_runs WHERE status='failed'", "pipeline_duration_seconds_sum": "SELECT COALESCE(sum(extract(epoch FROM ended_at-started_at)),0)::float8 FROM pipeline_runs WHERE ended_at IS NOT NULL", "pipeline_duration_seconds_count": "SELECT count(*) FROM pipeline_runs WHERE ended_at IS NOT NULL"}
 	for name, q := range queries {
 		var n float64
 		if s.DB.QueryRow(r.Context(), q).Scan(&n) == nil {

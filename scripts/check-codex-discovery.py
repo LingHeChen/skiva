@@ -2,9 +2,9 @@
 """Read-only app-server discovery check. Does not start a thread, model turn or send a user prompt."""
 import json,subprocess,tempfile,time,select
 from pathlib import Path
-with tempfile.TemporaryDirectory(prefix='esdp-agent-') as tmp:
- project=Path(tmp);source=project/'mount';skill=source/'esdp-discovery-check';skill.mkdir(parents=True)
- file=skill/'SKILL.md';file.write_text('---\nname: esdp-discovery-check\ndescription: ESDP discovery initial marker.\n---\nRead only fixture.\n')
+with tempfile.TemporaryDirectory(prefix='skiva-agent-') as tmp:
+ project=Path(tmp);source=project/'mount';skill=source/'skiva-discovery-check';skill.mkdir(parents=True)
+ file=skill/'SKILL.md';file.write_text('---\nname: skiva-discovery-check\ndescription: SKIVA discovery initial marker.\n---\nRead only fixture.\n')
  (project/'.agents').mkdir();(project/'.agents/skills').symlink_to(source,target_is_directory=True)
  subprocess.run(['git','init',str(project)],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,check=True)
  proc=subprocess.Popen(['codex','app-server','--stdio'],cwd=project,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,bufsize=1)
@@ -20,13 +20,13 @@ with tempfile.TemporaryDirectory(prefix='esdp-agent-') as tmp:
     if data.get('id')==id:return data
   raise RuntimeError('app-server response timeout')
  try:
-  send({'id':1,'method':'initialize','params':{'clientInfo':{'name':'esdp-validation','version':'1.0'},'capabilities':{'experimentalApi':True}}});response(1);send({'method':'initialized','params':{}})
+  send({'id':1,'method':'initialize','params':{'clientInfo':{'name':'skiva-validation','version':'1.0'},'capabilities':{'experimentalApi':True}}});response(1);send({'method':'initialized','params':{}})
   def listing(id):
    send({'id':id,'method':'skills/list','params':{'cwds':[str(project)],'forceReload':True}})
    out=response(id);found=[]
    def walk(v):
     if isinstance(v,dict):
-     if v.get('name')=='esdp-discovery-check':found.append({k:v[k] for k in ['name','description','path'] if k in v})
+     if v.get('name')=='skiva-discovery-check':found.append({k:v[k] for k in ['name','description','path'] if k in v})
      for x in v.values():walk(x)
     elif isinstance(v,list):
      for x in v:walk(x)

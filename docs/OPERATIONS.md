@@ -3,26 +3,26 @@
 ## Installation
 
 1. Use Node 24, Git and the Go 1.26.10 toolchain. `make deps` downloads locked dependencies.
-2. Copy `.env.example` to `.env.local`, mode 0600, choose a unique administrator bootstrap password (14+ characters), database URL and Web origin. `ESDP_ORG_ID` optionally selects the single deployment organization; keep it stable across upgrades.
+2. Copy `.env.example` to `.env.local`, mode 0600, choose a unique administrator bootstrap password (14+ characters), database URL and Web origin. `SKIVA_ORG_ID` optionally selects the single deployment organization; keep it stable across upgrades.
 3. `make db` starts the local PostgreSQL container. `make migrate-up` applies goose migrations. If using an alternate database, pass `DATABASE_URL=...`; `scripts/dev.sh` loads `.env.local` before calling Make.
-4. `make dev` runs the Go API/worker and Next.js. `ESDP_WEB_PORT` must agree with `ESDP_WEB_ORIGIN`. Current workspace preview uses port 3001 because 3000 was already in use by another project.
+4. `make dev` runs the Go API/worker and Next.js. `SKIVA_WEB_PORT` must agree with `SKIVA_WEB_ORIGIN`. Current workspace preview uses port 3001 because 3000 was already in use by another project.
 5. `docker compose -f deployments/compose.yaml --profile full up --build -d` is the packaged deployment path. Apply migrations before starting server, preserve Postgres and artifact volumes, and set credentials explicitly. The API refuses an absent/short bootstrap password.
 6. Use `deployments/Caddyfile` as a TLS reverse-proxy template. `/distribution/*` goes directly to Go, not through Next.js. Restrict `/metrics` to the monitoring network. Set production mode and the exact external HTTPS Web origin.
 
-The local database `esdp_local` contains the working demonstration; `esdp_test` is dedicated to integration tests. The initial development database `esdp` contains historical test fixtures and must not be used as deployment data.
+The local database `skiva_local` contains the working demonstration; `skiva_test` is dedicated to integration tests. The initial development database `skiva` contains historical test fixtures and must not be used as deployment data.
 
 ## OIDC and RBAC
 
-Set `ESDP_ENV=production`, `ESDP_OIDC_ISSUER`, `ESDP_OIDC_CLIENT_ID`, `ESDP_OIDC_CLIENT_SECRET`, `ESDP_WEB_ORIGIN`. Register `${ESDP_WEB_ORIGIN}/api/v1/auth/oidc/callback` at the IdP. Enforce MFA and organization policies at the IdP. The Go backend verifies discovery issuer, signature, audience, expiry and nonce; Authorization Code uses PKCE S256. Local password login is rejected in production.
+Set `SKIVA_ENV=production`, `SKIVA_OIDC_ISSUER`, `SKIVA_OIDC_CLIENT_ID`, `SKIVA_OIDC_CLIENT_SECRET`, `SKIVA_WEB_ORIGIN`. Register `${SKIVA_WEB_ORIGIN}/api/v1/auth/oidc/callback` at the IdP. Enforce MFA and organization policies at the IdP. The Go backend verifies discovery issuer, signature, audience, expiry and nonce; Authorization Code uses PKCE S256. Local password login is rejected in production.
 
 Pre-provision a member with the verified enterprise email, then assign roles. First OIDC login binds the issuer/subject to that pre-provisioned membership and clears the local password hash. Unprovisioned identities are denied. Subsequent logins use the bound subject. Sessions are 8 hours and explicit refresh rotates the session. Disable a member to revoke access through authorization checks.
 
 ## Git credentials and policy
 
 - HTTPS secrets contain an HTTP Authorization value (`Bearer ...` or `Basic ...`). Save the secret in protected runtime environment/KMS injection, then create a reference to its environment variable name in Settings. URL-embedded passwords are rejected.
-- SSH secrets contain a private key. The worker writes a short-lived 0600 key file, uses strict host checking, and removes the key after Git completes. Provide `ESDP_SSH_KNOWN_HOSTS`. No administrator personal key is used.
-- `ESDP_GIT_ALLOWLIST` explicitly permits private hostnames. DNS is validated, then Git's HTTPS resolve or SSH HostName is pinned to the validated address. Redirects, file/ext protocols, hooks, submodules and source CI scripts are disabled.
-- `ESDP_GIT_CA_BUNDLE` adds the corporate Git CA. TLS verification is never disabled. Prefer IPv4 when both address families are returned; IPv6-only repositories remain supported.
+- SSH secrets contain a private key. The worker writes a short-lived 0600 key file, uses strict host checking, and removes the key after Git completes. Provide `SKIVA_SSH_KNOWN_HOSTS`. No administrator personal key is used.
+- `SKIVA_GIT_ALLOWLIST` explicitly permits private hostnames. DNS is validated, then Git's HTTPS resolve or SSH HostName is pinned to the validated address. Redirects, file/ext protocols, hooks, submodules and source CI scripts are disabled.
+- `SKIVA_GIT_CA_BUNDLE` adds the corporate Git CA. TLS verification is never disabled. Prefer IPv4 when both address families are returned; IPv6-only repositories remain supported.
 - Static limits are configurable in Settings: file bytes, tree bytes, file count, blocking scripts and Markdown external links. `.skills-platform.yaml` can set root/trigger policy and stricter script/link checks. Unknown YAML keys (including arbitrary shell steps) fail validation.
 - Git fetch runs with a deadline and bounded captured output. Production operators must additionally give the worker a bounded-volume filesystem and CPU/memory quotas: a malicious Git pack can consume resources before tree validation. The service never claims that static analysis proves a Skill safe.
 
@@ -63,21 +63,21 @@ For a failed sync, inspect repository sync jobs and pipeline diagnostics. Fix so
 Stop API/worker writes and pause the demo Git source's writers before backup to obtain a consistent DB/CAS/Git recovery point. Use protected encrypted backup storage and define RPO/RTO for your environment.
 
 ```bash
-ESDP_DATABASE_URL='postgres://...' ESDP_DATA_DIR=/srv/esdp \
-ESDP_BACKUP_DIR=/secure/backups ./scripts/backup.sh
+SKIVA_DATABASE_URL='postgres://...' SKIVA_DATA_DIR=/srv/skiva \
+SKIVA_BACKUP_DIR=/secure/backups ./scripts/backup.sh
 ```
 
-Use a PostgreSQL client matching the server major version. For local Docker, `ESDP_PG_CONTAINER=esdp-postgres` uses the container's matching pg_dump/pg_restore instead of an older host binary. This optional mode assumes the local `esdp` DB user.
+Use a PostgreSQL client matching the server major version. For local Docker, `SKIVA_PG_CONTAINER=skiva-postgres` uses the container's matching pg_dump/pg_restore instead of an older host binary. This optional mode assumes the local `skiva` DB user.
 
 Restore into a **new empty database** and a **nonexistent data directory**:
 
 ```bash
-ESDP_RESTORE_DATABASE_URL='postgres://.../new_database' \
-ESDP_RESTORE_DATA_DIR=/srv/esdp-restored \
+SKIVA_RESTORE_DATABASE_URL='postgres://.../new_database' \
+SKIVA_RESTORE_DATA_DIR=/srv/skiva-restored \
 ./scripts/restore.sh /secure/backups/TIMESTAMP
 ```
 
-The script verifies checksums, restores DB and data, then verifies every version→Blob digest and size. Only switch service configuration after this succeeds and channel/profile inspection matches the expected state. The workspace rehearsal restored `esdp_local` to `esdp_restore` and verified all referenced objects.
+The script verifies checksums, restores DB and data, then verifies every version→Blob digest and size. Only switch service configuration after this succeeds and channel/profile inspection matches the expected state. The workspace rehearsal restored `skiva_local` to `skiva_restore` and verified all referenced objects.
 
 ## Retention and audit export
 
@@ -92,3 +92,11 @@ Migration 00001 initializes core data and append-only triggers; its down migrati
 ## Linux mounts
 
 Install FUSE3. Run as an unprivileged host user where possible. For controlled test containers only, pass `/dev/fuse` and the mount capability; do not apply privileged mode to general Agent pods. Prefer a pre-mounted host volume. The delivered tests use a read-only mount, zero metadata TTL and direct file IO to preserve new-open visibility without reusing stale kernel file content. Old open handles retain their immutable Blob. Pin per task when task-wide consistency is required.
+
+## Skiva naming and GitHub Pages
+
+Configuration uses the `SKIVA_` environment prefix, the Go module is `skiva`, and the server binary is `bin/skiva-server`. Existing installations must migrate deployment variables, service names and client configuration/cache paths when upgrading from a pre-rename build. Preserve credentials and data; renaming a database is not required if `SKIVA_DATABASE_URL` points to its existing location. The mount CLI command remains `skills-mount`.
+
+The documentation site is published at https://linghechen.github.io/skiva/ by `.github/workflows/pages.yml`. Only explicitly selected documentation components, content and styles enter the isolated static build. The full administration application still requires the Next.js and Go services. Repository Pages settings use GitHub Actions as the source.
+
+Run `npm run build:docs --prefix apps/web` to export, then `npm run test:docs --prefix apps/web` to verify subpath assets, deep links, search, clipboard and mobile navigation on a static HTTP server.

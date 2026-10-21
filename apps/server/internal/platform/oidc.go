@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"golang.org/x/oauth2"
 	"net/http"
@@ -19,11 +19,11 @@ type oidcState struct {
 }
 
 func (s *Server) oidcConfig(ctx context.Context) (*oidc.Provider, oauth2.Config, error) {
-	p, e := oidc.NewProvider(ctx, env("ESDP_OIDC_ISSUER", ""))
+	p, e := oidc.NewProvider(ctx, env("SKIVA_OIDC_ISSUER", ""))
 	if e != nil {
 		return nil, oauth2.Config{}, e
 	}
-	return p, oauth2.Config{ClientID: env("ESDP_OIDC_CLIENT_ID", ""), ClientSecret: env("ESDP_OIDC_CLIENT_SECRET", ""), RedirectURL: s.Origin + "/api/v1/auth/oidc/callback", Endpoint: p.Endpoint(), Scopes: []string{oidc.ScopeOpenID, "profile", "email"}}, nil
+	return p, oauth2.Config{ClientID: env("SKIVA_OIDC_CLIENT_ID", ""), ClientSecret: env("SKIVA_OIDC_CLIENT_SECRET", ""), RedirectURL: s.Origin + "/api/v1/auth/oidc/callback", Endpoint: p.Endpoint(), Scopes: []string{oidc.ScopeOpenID, "profile", "email"}}, nil
 }
 func (s *Server) oidcStart(w http.ResponseWriter, r *http.Request) {
 	_, cfg, e := s.oidcConfig(r.Context())
@@ -33,12 +33,12 @@ func (s *Server) oidcStart(w http.ResponseWriter, r *http.Request) {
 	}
 	state := oidcState{Token(), Token(), Token()}
 	b, _ := json.Marshal(state)
-	http.SetCookie(w, &http.Cookie{Name: "esdp_oidc", Value: base64.RawURLEncoding.EncodeToString(b), Path: "/api/v1/auth/oidc", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteLaxMode, MaxAge: 300})
+	http.SetCookie(w, &http.Cookie{Name: "skiva_oidc", Value: base64.RawURLEncoding.EncodeToString(b), Path: "/api/v1/auth/oidc", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteLaxMode, MaxAge: 300})
 	h := sha256.Sum256([]byte(state.Verifier))
 	http.Redirect(w, r, cfg.AuthCodeURL(state.State, oidc.Nonce(state.Nonce), oauth2.SetAuthURLParam("code_challenge", base64.RawURLEncoding.EncodeToString(h[:])), oauth2.SetAuthURLParam("code_challenge_method", "S256")), http.StatusFound)
 }
 func (s *Server) oidcCallback(w http.ResponseWriter, r *http.Request) {
-	c, e := r.Cookie("esdp_oidc")
+	c, e := r.Cookie("skiva_oidc")
 	if e != nil {
 		fail(w, r, 401, "OIDC_STATE", "Missing login state")
 		return
@@ -49,7 +49,7 @@ func (s *Server) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		fail(w, r, 401, "OIDC_STATE", "Invalid login state")
 		return
 	}
-	http.SetCookie(w, &http.Cookie{Name: "esdp_oidc", Value: "", Path: "/api/v1/auth/oidc", MaxAge: -1, HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteLaxMode})
+	http.SetCookie(w, &http.Cookie{Name: "skiva_oidc", Value: "", Path: "/api/v1/auth/oidc", MaxAge: -1, HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteLaxMode})
 	p, cfg, e := s.oidcConfig(r.Context())
 	if e != nil {
 		fail(w, r, 503, "OIDC_UNAVAILABLE", "Identity provider unavailable")
@@ -92,6 +92,6 @@ func (s *Server) oidcCallback(w http.ResponseWriter, r *http.Request) {
 		s.dbError(w, r, e)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{Name: "esdp_session", Value: t, Path: "/", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteStrictMode, MaxAge: 28800})
+	http.SetCookie(w, &http.Cookie{Name: "skiva_session", Value: t, Path: "/", HttpOnly: true, Secure: s.Production, SameSite: http.SameSiteStrictMode, MaxAge: 28800})
 	http.Redirect(w, r, "/dashboard", http.StatusFound)
 }

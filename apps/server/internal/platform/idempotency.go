@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"github.com/jackc/pgx/v5"
 	"io"
 	"net/http"

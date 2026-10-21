@@ -5,3 +5,6 @@ bin
 .env*
 .git
 test-results
+
+.pages-build
+.pages-preview

@@ -2,7 +2,7 @@
 
 ## 1. Monorepo
 ```
-esdp/
+skiva/
   apps/web/                       # Next.js App Router
   apps/server/cmd/server/         # Go 二进制
   apps/server/internal/{auth,repository,pipeline,registry,release,distribution,profile,audit}/
@@ -31,7 +31,7 @@ esdp/
 每个阶段验收必须包括对应文档 API/测试/UI，而不是“后端能跑就结束”。优先单人可交付的顺序：迁移/API contract → 后端领域逻辑 → Worker → 前端页面 → 协议 → 挂载客户端 → 测试硬化。
 
 ## 4. 环境与配置
-环境：local / staging / production。环境变量按 `ESDP_` 前缀配置域名、数据库、Git allowlist、对象目录、OIDC、审计日志、缓存参数。运行环境不得使用管理员 Git SSH key；Secrets 通过 Kubernetes Secrets/HashiCorp Vault/企业 KMS 或受保护环境注入。
+环境：local / staging / production。环境变量按 `SKIVA_` 前缀配置域名、数据库、Git allowlist、对象目录、OIDC、审计日志、缓存参数。运行环境不得使用管理员 Git SSH key；Secrets 通过 Kubernetes Secrets/HashiCorp Vault/企业 KMS 或受保护环境注入。
 
 ## 5. 监控
 OpenTelemetry trace 串起 requestId→Webhook→Job→Release；Prometheus 指标：pipeline_duration_seconds、pipeline_failures_total、content_requests_total{status}、manifest_generation、client_staleness_seconds、mount_cache_hit_ratio、channel_promote_conflicts_total、audit_write_failures_total。Grafana Dashboard + 告警：Blob 数据缺失、发布失败、Worker 积压、客户端大面积落后、Git 同步持续报错、凭据快过期。

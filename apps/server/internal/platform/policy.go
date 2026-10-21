@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"esdp/packages/protocol"
+	"skiva/packages/protocol"
 	"gopkg.in/yaml.v3"
 	"strings"
 )

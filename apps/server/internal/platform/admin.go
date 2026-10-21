@@ -121,7 +121,7 @@ func (s *Server) createMember(w http.ResponseWriter, r *http.Request) {
 	jsonOut(w, 201, map[string]string{"id": id})
 }
 func (s *Server) settings(w http.ResponseWriter, r *http.Request) {
-	s.one(w, r, `SELECT jsonb_build_object('name',o.name,'policy',s.value,'oidcConfigured',$2::boolean,'production',$3::boolean) FROM organizations o JOIN settings s ON s.org_id=o.id WHERE o.id=$1`, who(r).Org, env("ESDP_OIDC_ISSUER", "") != "", s.Production)
+	s.one(w, r, `SELECT jsonb_build_object('name',o.name,'policy',s.value,'oidcConfigured',$2::boolean,'production',$3::boolean) FROM organizations o JOIN settings s ON s.org_id=o.id WHERE o.id=$1`, who(r).Org, env("SKIVA_OIDC_ISSUER", "") != "", s.Production)
 }
 func (s *Server) saveSettings(w http.ResponseWriter, r *http.Request) {
 	var in struct {

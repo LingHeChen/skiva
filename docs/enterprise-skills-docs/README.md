@@ -1,4 +1,4 @@
-# Enterprise Skills Delivery Platform（ESDP）开发文档
+# Enterprise Skills Delivery Platform（SKIVA）开发文档
 
 版本：1.0 / 需求基线：2026-10-21 / 状态：可启动工程实施（有显式待决项）
 

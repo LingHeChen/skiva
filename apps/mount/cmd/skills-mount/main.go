@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"esdp/apps/mount/internal/mountfs"
+	"skiva/apps/mount/internal/mountfs"
 	"flag"
 	"fmt"
 	"os"
@@ -33,7 +33,7 @@ func run() error {
 		return fmt.Errorf("usage: skills-mount login|mount|status|refresh|unmount")
 	}
 	home, _ := os.UserConfigDir()
-	cfgPath := filepath.Join(home, "esdp", "client.json")
+	cfgPath := filepath.Join(home, "skiva", "client.json")
 	cfg := Config{}
 	if b, e := os.ReadFile(cfgPath); e == nil {
 		json.Unmarshal(b, &cfg)
@@ -44,13 +44,13 @@ func run() error {
 	mode := f.String("mode", cfg.Mode, "dynamic or pinned (must match profile)")
 	path := f.String("path", "", "mount directory")
 	tokenFile := f.String("token-file", "", "0600 credential file")
-	cache := f.String("cache", filepath.Join(home, "esdp", "cache"), "cache directory")
+	cache := f.String("cache", filepath.Join(home, "skiva", "cache"), "cache directory")
 	repin := f.Bool("repin", false, "explicitly re-pin a running task (never during a task)")
 	snapshot := f.String("snapshot", "", "explicit authorized pinned snapshot")
 	if e := f.Parse(os.Args[2:]); e != nil {
 		return e
 	}
-	token := os.Getenv("ESDP_CLIENT_TOKEN")
+	token := os.Getenv("SKIVA_CLIENT_TOKEN")
 	if token == "" {
 		token = cfg.Token
 	}
@@ -75,7 +75,7 @@ func run() error {
 	switch os.Args[1] {
 	case "login":
 		if token == "" || *server == "" {
-			return fmt.Errorf("supply --server and ESDP_CLIENT_TOKEN or --token-file")
+			return fmt.Errorf("supply --server and SKIVA_CLIENT_TOKEN or --token-file")
 		}
 		if e := v.Refresh(ctx, false); e != nil {
 			return e

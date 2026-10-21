@@ -5,7 +5,7 @@ Evidence is produced from the delivered source. Test mocks are used only for tra
 ## Environment
 
 - Host: macOS arm64, Apple M4, Go 1.26.10, Node 24, Next.js 16.4.2.
-- PostgreSQL 17 in Docker. Clean application database `esdp_local`; isolated integration database `esdp_test`; migration and restored databases separate.
+- PostgreSQL 17 in Docker. Clean application database `skiva_local`; isolated integration database `skiva_test`; migration and restored databases separate.
 - Linux mount test: Docker LinuxKit 6.10.14 aarch64, FUSE3, controlled `/dev/fuse` + SYS_ADMIN container. Native arm64 test binary passed. amd64 binary passed through the host's executable emulation; this is not native x86_64 hardware acceptance.
 
 ## Baseline cases
@@ -40,12 +40,12 @@ Additional checks: OIDC Authorization Code + PKCE with signed test IdP and wrong
 ```bash
 make lint test build-server build-mount openapi-generate sqlc-generate
 npm run build --prefix apps/web
-cd apps/web && ESDP_DEMO_E2E=1 npx playwright test
+cd apps/web && SKIVA_DEMO_E2E=1 npx playwright test
 GOTOOLCHAIN=go1.26.10 go run golang.org/x/vuln/cmd/govulncheck@latest ./apps/server/... ./apps/mount/... ./packages/...
 npm audit --prefix apps/web --omit=dev --audit-level=high --registry=https://registry.npmjs.org
 ./scripts/test-linux-fuse.sh arm64
 ./scripts/test-linux-fuse.sh amd64
-ESDP_ADMIN_PASSWORD=... .data/validation-venv/bin/python scripts/contract-check.py
+SKIVA_ADMIN_PASSWORD=... .data/validation-venv/bin/python scripts/contract-check.py
 ```
 
 - Go unit/integration/race suite passed, including partial Profile PATCH preserving fields and audited before/after state.

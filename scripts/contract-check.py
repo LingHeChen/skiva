@@ -2,11 +2,11 @@
 import os,json,urllib.request,http.cookiejar,re
 from pathlib import Path
 import jsonschema
-spec=json.loads(Path('packages/openapi/openapi.yaml').read_text());jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar));base=os.environ.get('ESDP_API_URL','http://127.0.0.1:8080')
+spec=json.loads(Path('packages/openapi/openapi.yaml').read_text());jar=http.cookiejar.CookieJar();client=urllib.request.build_opener(urllib.request.HTTPCookieProcessor(jar));base=os.environ.get('SKIVA_API_URL','http://127.0.0.1:8080')
 def call(path,body=None):
  req=urllib.request.Request(base+path,data=None if body is None else json.dumps(body).encode(),headers={'Content-Type':'application/json'})
  with client.open(req) as response:return response.status,json.load(response)
-call('/api/v1/auth/login',{'email':os.environ.get('ESDP_ADMIN_EMAIL','admin@localhost'),'password':os.environ['ESDP_ADMIN_PASSWORD']})
+call('/api/v1/auth/login',{'email':os.environ.get('SKIVA_ADMIN_EMAIL','admin@localhost'),'password':os.environ['SKIVA_ADMIN_PASSWORD']})
 def verify(path,template=None):
  status,data=call(path);template=template or path;schema=spec['paths'][template]['get']['responses'][str(status)]['content']['application/json']['schema'];resolved={**schema,'components':spec['components']};jsonschema.Draft202012Validator(resolved).validate(data);return data
 count=0

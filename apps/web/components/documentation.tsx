@@ -31,6 +31,8 @@ function textOf(node: ReactNode): string {
     return textOf(node.props.children);
   return "";
 }
+const docsOnly = process.env.NEXT_PUBLIC_DOCS_ONLY === "true";
+
 const anchor = (value: string) =>
   value
     .trim()
@@ -87,7 +89,7 @@ export function Documentation({ slug }: { slug: string }) {
       )
     : [];
   useEffect(() => {
-    const saved = localStorage.getItem("esdp-theme");
+    const saved = localStorage.getItem("skiva-theme");
     const isDark =
       saved && saved !== "system"
         ? saved === "dark"
@@ -186,7 +188,7 @@ export function Documentation({ slug }: { slug: string }) {
           <span className="docs-brand-mark">
             <BookOpen size={20} />
           </span>
-          <strong>ESDP</strong>
+          <strong>SKIVA</strong>
           <span className="docs-brand-divider" />
           <span>文档</span>
         </Link>
@@ -244,13 +246,16 @@ export function Documentation({ slug }: { slug: string }) {
             const next = !dark;
             setDark(next);
             document.documentElement.dataset.theme = next ? "dark" : "light";
-            localStorage.setItem("esdp-theme", next ? "dark" : "light");
+            localStorage.setItem("skiva-theme", next ? "dark" : "light");
           }}
         >
           {dark ? <Sun size={18} /> : <Moon size={18} />}
         </button>
-        <Link className="docs-console-link" href="/dashboard">
-          控制台 <ArrowRight size={15} />
+        <Link
+          className="docs-console-link"
+          href={docsOnly ? "https://github.com/LingHeChen/skiva" : "/dashboard"}
+        >
+          {docsOnly ? "GitHub" : "控制台"} <ArrowRight size={15} />
         </Link>
       </header>
       <div className="docs-layout">
@@ -279,7 +284,7 @@ export function Documentation({ slug }: { slug: string }) {
         )}
         <main id="docs-content" className="docs-main">
           <div className="docs-eyebrow">
-            ESDP HANDBOOK <span>/</span> {doc.group}
+            SKIVA HANDBOOK <span>/</span> {doc.group}
           </div>
           <h1>{doc.title}</h1>
           <p className="docs-lead">{doc.description}</p>
@@ -334,7 +339,13 @@ export function Documentation({ slug }: { slug: string }) {
                 ),
                 pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
                 a: ({ href, children }) =>
-                  href?.startsWith("/") ? (
+                  docsOnly &&
+                  href?.startsWith("/") &&
+                  !href.startsWith("/docs") ? (
+                    <span title="在自部署的 Skiva 管理端中打开">
+                      {children}（管理端）
+                    </span>
+                  ) : href?.startsWith("/") ? (
                     <Link href={href}>{children}</Link>
                   ) : (
                     <a href={href}>{children}</a>
@@ -355,7 +366,7 @@ export function Documentation({ slug }: { slug: string }) {
             </ReactMarkdown>
           </article>
           <div className="docs-page-footer">
-            <span>ESDP · 操作手册</span>
+            <span>SKIVA · 操作手册</span>
             <a href="#docs-content">回到顶部 ↑</a>
           </div>
           <nav className="docs-pagination" aria-label="文档翻页">

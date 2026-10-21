@@ -2,11 +2,11 @@
 """Query Claude Code initialization metadata only. No user/model prompt is sent."""
 import json,subprocess,tempfile,time,select
 from pathlib import Path
-with tempfile.TemporaryDirectory(prefix='esdp-claude-') as tmp:
- project=Path(tmp);source=project/'mount';skill=source/'esdp-discovery-check';skill.mkdir(parents=True);(skill/'SKILL.md').write_text('---\nname: esdp-discovery-check\ndescription: ESDP local discovery acceptance fixture.\n---\nRead only fixture.\n');(project/'.claude').mkdir();(project/'.claude/skills').symlink_to(source,target_is_directory=True)
+with tempfile.TemporaryDirectory(prefix='skiva-claude-') as tmp:
+ project=Path(tmp);source=project/'mount';skill=source/'skiva-discovery-check';skill.mkdir(parents=True);(skill/'SKILL.md').write_text('---\nname: skiva-discovery-check\ndescription: SKIVA local discovery acceptance fixture.\n---\nRead only fixture.\n');(project/'.claude').mkdir();(project/'.claude/skills').symlink_to(source,target_is_directory=True)
  proc=subprocess.Popen(['claude','-p','--input-format','stream-json','--output-format','stream-json','--verbose','--setting-sources','project','--no-session-persistence'],cwd=project,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,text=True,bufsize=1)
  try:
-  proc.stdin.write(json.dumps({'type':'control_request','request_id':'esdp-init','request':{'subtype':'initialize'}})+'\n');proc.stdin.flush();end=time.time()+25;found=[];keys=[]
+  proc.stdin.write(json.dumps({'type':'control_request','request_id':'skiva-init','request':{'subtype':'initialize'}})+'\n');proc.stdin.flush();end=time.time()+25;found=[];keys=[]
   while time.time()<end:
    if not select.select([proc.stdout],[],[],1)[0]:continue
    line=proc.stdout.readline()
@@ -15,11 +15,11 @@ with tempfile.TemporaryDirectory(prefix='esdp-claude-') as tmp:
    except json.JSONDecodeError:continue
    def walk(v):
     if isinstance(v,dict):
-     if v.get('name')=='esdp-discovery-check':found.append({k:v[k] for k in ['name','description'] if k in v})
+     if v.get('name')=='skiva-discovery-check':found.append({k:v[k] for k in ['name','description'] if k in v})
      for x in v.values():walk(x)
     elif isinstance(v,list):
      for x in v:walk(x)
-    elif isinstance(v,str) and v=='esdp-discovery-check':found.append({'name':v})
+    elif isinstance(v,str) and v=='skiva-discovery-check':found.append({'name':v})
    walk(data)
    if found:break
    keys.append(data.get('type','unknown'))
