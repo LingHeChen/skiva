@@ -1,0 +1,30 @@
+{
+ email {$SKIVA_ACME_EMAIL}
+}
+{$SKIVA_DOMAIN} {
+ @private path /metrics /healthz
+ respond @private 404
+ handle /git/* {
+  request_body {
+   max_size 64MB
+  }
+  reverse_proxy server:8080 {
+   header_up X-Forwarded-Proto https
+   transport http {
+    dial_timeout 10s
+    response_header_timeout 130s
+   }
+  }
+ }
+ handle /distribution/* {
+  reverse_proxy server:8080 {
+   flush_interval -1
+  }
+ }
+ handle /api/* {
+  reverse_proxy server:8080
+ }
+ handle {
+  reverse_proxy web:3000
+ }
+}

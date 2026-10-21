@@ -15,6 +15,23 @@ func main() {
 	if len(os.Args) == 3 && os.Args[1] == "git-hook" {
 		os.Exit(platform.GitHookMain(os.Args[2]))
 	}
+	if len(os.Args) == 2 && os.Args[1] == "healthcheck" {
+		if e := healthcheck(); e != nil {
+			os.Exit(1)
+		}
+		return
+	}
+	if e := loadSecrets(); e != nil {
+		slog.Error("configuration", "error", e)
+		os.Exit(1)
+	}
+	if len(os.Args) == 2 && os.Args[1] == "migrate" {
+		if e := migrate(); e != nil {
+			slog.Error("migration", "error", e)
+			os.Exit(1)
+		}
+		return
+	}
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	shutdown, e := platform.InitTelemetry(ctx)
