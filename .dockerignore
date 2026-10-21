@@ -10,3 +10,9 @@ test-results
 .pages-preview
 .data-backups
 .restore-data-*
+
+.local-materials
+docs/enterprise-skills-docs
+docs/design
+docs/research
+prototype*.html

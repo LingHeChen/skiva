@@ -89,13 +89,10 @@ skills-mount unmount --path ~/agent-skills
 
 文档正文维护在 `apps/web/content/docs.ts`，每篇使用 Markdown 内容；新增条目会自动进入导航、搜索、静态页面和翻页链接。
 
-- 原始需求：[文档包](docs/enterprise-skills-docs/README.md)
-- 当前完成度与真实限制：[IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md)
 - 部署/恢复：[运维手册](docs/OPERATIONS.md)
 - Agent 集成：[适配说明](docs/AGENT_INTEGRATION.md)
 - API：[OpenAPI 3.1](packages/openapi/openapi.yaml)
 - 测试：[验收报告](docs/ACCEPTANCE.md)
-- 交付源文件：[文件清单](docs/DELIVERY_FILES.md)
 
 ## Native managed Git hosting
 
@@ -103,4 +100,4 @@ Skiva can host private Skills repositories alongside existing external Git sourc
 
 Create a managed repository in the console, issue a repository-scoped Git PAT, then use standard HTTPS clone/fetch/push. Accepted refs enter the existing fixed-commit pipeline; Git push never promotes Stable automatically. Published artifacts and existing delivery clients remain compatible.
 
-See [managed Git guide](docs/hosting/managed-git.md), [pre-change audit](docs/hosting/CurrentStateAudit.md), and [acceptance record](docs/hosting/ACCEPTANCE.md). Bare repositories and durable event spool reside in the existing data volume and must be restored together with PostgreSQL and CAS.
+See [managed Git guide](docs/hosting/managed-git.md) and [acceptance record](docs/hosting/ACCEPTANCE.md). Bare repositories and durable event spool reside in the existing data volume and must be restored together with PostgreSQL and CAS.

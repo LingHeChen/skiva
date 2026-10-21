@@ -25,3 +25,15 @@ __pycache__/
 .pages-preview/
 .data-backups/
 .restore-data-*/
+
+# Local planning inputs and historical project materials
+/IMPLEMENTATION_STATUS.md
+/prototype*.html
+/docs/enterprise-skills-docs/
+/docs/design/
+/docs/research/
+/docs/DESIGN.md
+/docs/DELIVERY_FILES.md
+/docs/hosting/CurrentStateAudit.md
+/docs/hosting/native-git-hosting-migration.md
+/.local-materials/

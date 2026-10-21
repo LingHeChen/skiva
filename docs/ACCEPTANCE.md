@@ -72,7 +72,22 @@ SKIVA_ADMIN_PASSWORD=... .data/validation-venv/bin/python scripts/contract-check
 - Native x86_64 host matrix, target kernels/container policies and actual Linux Agent sandbox discovery/loaded-context behavior.
 - Full fault-injection environment for PostgreSQL primary failover, host disk exhaustion and production network/DNS policy.
 - Production load, availability and recovery-time objectives; no unmeasured SLO is claimed.
-- Docker image build could not complete because registry base-layer downloads stalled; native Go/Next production compilation passed.
-- Native macOS/Windows drivers remain the separate future milestone specified in the source documents.
+- The server Docker image and migration command were subsequently verified locally; actual deployment TLS, enterprise IdP and alert delivery still require environment acceptance.
+- Native macOS/Windows mounting is not implemented; the mount client requires Linux FUSE.
 
-See `IMPLEMENTATION_STATUS.md` for the current acceptance boundary. Screenshots/logs are in ignored `test-results/` because they can contain transient test identities and one-time credential responses in failure traces.
+Screenshots/logs are in ignored `test-results/` because they can contain transient test identities and one-time credential responses in failure traces.
+
+## Functional boundaries
+
+- Managed Git accepts source writes; the distribution client and its mounted files remain read-only. See [managed Git acceptance](hosting/ACCEPTANCE.md).
+- Percentage rollouts, arbitrary-script CI, an online editor and billing are not implemented.
+- Offline cached access cannot provide immediate revocation while disconnected. Profiles must explicitly choose an offline policy.
+- Workload credentials are shown only once and stored as hashes. Idempotent replay does not display them again; rotate lost credentials.
+- List pages collect cursor pages before local filtering and pagination. Large registries require workload-specific memory and latency qualification.
+- Pipeline discovery, validation and artifact steps share a static scan interval; displayed durations overlap and must not be added together.
+
+## Local Pydantic AI pilot
+
+A Pydantic AI agent using real model calls read a managed Git Skill through an actual ARM64 Linux FUSE mount. Two local runs covered initial content, dynamic updates, pinned content, rollback and credential revocation. The model ran on the macOS host and its tool read the container mount; this does not qualify every Agent sandbox or long-lived context cache. The repeatable example and configuration are in [examples/pydantic-agent](../examples/pydantic-agent/README.md).
+
+The single-host preproduction Compose template, file-backed server secrets and server migration command are available in [deployments/preproduction](../deployments/preproduction/README.md). Local verification does not replace production load, recovery and identity-provider acceptance.
