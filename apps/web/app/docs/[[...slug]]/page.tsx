@@ -4,8 +4,6 @@ import { docs } from "@/content/docs";
 import { Documentation } from "@/components/documentation";
 import "../docs.css";
 
-export const dynamicParams = false;
-
 type Props = { params: Promise<{ slug?: string[] }> };
 export function generateStaticParams() {
   return docs.map((doc) => ({ slug: doc.slug ? [doc.slug] : [] }));

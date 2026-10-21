@@ -31,6 +31,11 @@ for (const entry of [
 ]) {
   cpSync(join(web, entry), join(stage, entry), { recursive: true });
 }
+const docsRoute = join(stage, "app/docs/[[...slug]]/page.tsx");
+writeFileSync(
+  docsRoute,
+  readFileSync(docsRoute, "utf8") + "\nexport const dynamicParams = false;\n",
+);
 mkdirSync(join(stage, "components"));
 cpSync(
   join(web, "components/documentation.tsx"),
