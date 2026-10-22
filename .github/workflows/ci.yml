@@ -29,6 +29,17 @@ jobs:
           PGPASSWORD=skiva-dev createdb -h localhost -p 55432 -U skiva skiva_test
           make DATABASE_URL='postgres://skiva:skiva-dev@localhost:55432/skiva_test?sslmode=disable' migrate-up
           make deps migrate-up lint test build
+      - uses: actions/checkout@v4
+        with:
+          repository: LingHeChen/skiva-python
+          path: .sdk-integration
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Python SDK against real server and PostgreSQL
+        run: |
+          python -m pip install ./.sdk-integration
+          SKIVA_SDK_PYTHON="$(command -v python)" go test ./apps/server/internal/platform -run 'TestPythonSDKDistribution|TestDistributionDatabaseFailure|TestSnapshotGrantRetention' -count=1
       - run: make openapi-generate sqlc-generate && git diff --exit-code -- packages/openapi apps/server/internal/db
       - run: SKIVA_DB_PASSWORD=compose-validation-only docker compose config --quiet
       - run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./apps/server/... ./apps/mount/... ./packages/...

@@ -291,6 +291,7 @@ type SnapshotGrant struct {
 	ClientID   pgtype.UUID
 	SnapshotID pgtype.UUID
 	CreatedAt  pgtype.Timestamptz
+	ExpiresAt  pgtype.Timestamptz
 }
 
 type User struct {
