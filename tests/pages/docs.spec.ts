@@ -122,3 +122,73 @@ test("English and Chinese articles retain language across search, links and relo
   }
   expect(errors).toEqual([]);
 });
+
+test("SDK guides support direct links, search, language switching and code copying", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  for (const locale of ["", "zh/"]) {
+    for (const slug of [
+      "sdk-python",
+      "sdk-consistency",
+      "sdk-pydantic-ai",
+      "sdk-files",
+      "sdk-reference",
+    ]) {
+      const response = await page.goto(`/skiva/docs/${locale}${slug}/`);
+      expect(response?.status()).toBe(200);
+      await expect(page.locator(".docs-main h1")).toBeVisible();
+      await expect(
+        page.locator('.docs-sidebar a[aria-current="page"]'),
+      ).toHaveAttribute("href", `/skiva/docs/${locale}${slug}/`);
+      await expect(
+        page.locator(
+          '.docs-prose a[href="https://github.com/LingHeChen/skiva-python"]',
+        ),
+      ).toBeVisible();
+    }
+  }
+  await page.goto("/skiva/docs/sdk-python/");
+  await page
+    .getByRole("button", { name: "Copy code", exact: true })
+    .first()
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toContain(
+      "skiva-sdk @ git+https://github.com/LingHeChen/skiva-python.git@011bf4f",
+    );
+  await page
+    .getByRole("textbox", { name: "Search documentation", exact: true })
+    .fill("SkivaSkills");
+  await page
+    .locator("#docs-results")
+    .getByRole("link", { name: /Pydantic AI integration/ })
+    .click();
+  await expect(page).toHaveURL(/\/skiva\/docs\/sdk-pydantic-ai\/$/);
+  await page.getByRole("link", { name: "Switch to Chinese" }).click();
+  await expect(page).toHaveURL(/\/skiva\/docs\/zh\/sdk-pydantic-ai\/$/);
+  await page.reload();
+  await page
+    .locator('.docs-prose a[href="/skiva/docs/zh/sdk-consistency/"]')
+    .click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "快照与更新策略",
+  );
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole("button", { name: "打开文档导航" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("link", { name: "导出文件与框架接入" })
+    .click();
+  await expect(page).toHaveURL(/\/skiva\/docs\/zh\/sdk-files\/$/);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBeTruthy();
+  expect(errors).toEqual([]);
+});
