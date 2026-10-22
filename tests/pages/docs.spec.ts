@@ -159,7 +159,7 @@ test("SDK guides support direct links, search, language switching and code copyi
   await expect
     .poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toContain(
-      "skiva-sdk==0.1.0",
+      "skiva-sdk==0.2.0",
     );
   await page
     .getByRole("textbox", { name: "Search documentation", exact: true })
