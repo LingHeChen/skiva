@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
 import { getDocs, docHref } from "@/content/docs";
 
 function textOf(node: ReactNode): string {
@@ -350,6 +351,7 @@ export function Documentation({ slug }: { slug: string }) {
           <article className="docs-prose">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
               skipHtml
               components={{
                 h2: ({ children }) => (

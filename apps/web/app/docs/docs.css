@@ -373,6 +373,56 @@
   background: transparent;
   padding: 0;
 }
+/* Scoped token colors keep inline code and the console unchanged. */
+.docs-code {
+  --syntax-keyword: #8242a8;
+  --syntax-string: #236d38;
+  --syntax-function: #185e98;
+  --syntax-number: #a34416;
+  --syntax-comment: #61716b;
+}
+:root[data-theme="dark"] .docs-code {
+  --syntax-keyword: #d6a6ef;
+  --syntax-string: #b3d994;
+  --syntax-function: #93c9ee;
+  --syntax-number: #efba87;
+  --syntax-comment: #a0ada1;
+}
+.docs-code .hljs-keyword,
+.docs-code .hljs-selector-tag,
+.docs-code .hljs-literal,
+.docs-code .hljs-meta {
+  color: var(--syntax-keyword);
+}
+.docs-code .hljs-string,
+.docs-code .hljs-regexp,
+.docs-code .hljs-addition {
+  color: var(--syntax-string);
+}
+.docs-code .hljs-title,
+.docs-code .hljs-built_in,
+.docs-code .hljs-attr,
+.docs-code .hljs-attribute,
+.docs-code .hljs-section {
+  color: var(--syntax-function);
+}
+.docs-code .hljs-number,
+.docs-code .hljs-symbol,
+.docs-code .hljs-variable,
+.docs-code .hljs-deletion {
+  color: var(--syntax-number);
+}
+.docs-code .hljs-comment,
+.docs-code .hljs-quote {
+  color: var(--syntax-comment);
+  font-style: italic;
+}
+.docs-code .hljs-emphasis {
+  font-style: italic;
+}
+.docs-code .hljs-strong {
+  font-weight: 600;
+}
 .docs-table {
   overflow-x: auto;
   margin: 22px 0;

@@ -192,3 +192,46 @@ test("SDK guides support direct links, search, language switching and code copyi
   ).toBeTruthy();
   expect(errors).toEqual([]);
 });
+
+test("code highlighting survives theme changes and copies original text", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.goto("/skiva/docs/sdk-python/");
+  const code = page.locator("code.language-python").first();
+  await expect(code.locator(".hljs-keyword").first()).toHaveText("import");
+  await expect(
+    page.locator("code.language-bash .hljs-string").first(),
+  ).toBeVisible();
+  const source = (await code.textContent())!.replace(/\n$/, "");
+  const colors: string[] = [];
+  for (const theme of ["light", "dark"]) {
+    await page.evaluate((value) => {
+      document.documentElement.dataset.theme = value;
+    }, theme);
+    const token = await code
+      .locator(".hljs-keyword")
+      .first()
+      .evaluate((el) => getComputedStyle(el).color);
+    const plain = await code.evaluate((el) => getComputedStyle(el).color);
+    expect(token).not.toBe(plain);
+    colors.push(token);
+  }
+  expect(colors[0]).not.toBe(colors[1]);
+  await code
+    .locator("xpath=ancestor::div[contains(@class,'docs-code')]")
+    .getByRole("button")
+    .click();
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe(source);
+  await page.screenshot({
+    path: "../../test-results/screenshots/sdk-code-highlight-dark.png",
+    fullPage: true,
+  });
+  await page.goto("/skiva/docs/pipelines/");
+  await expect(
+    page.locator("code.language-yaml .hljs-attr").first(),
+  ).toBeVisible();
+});
